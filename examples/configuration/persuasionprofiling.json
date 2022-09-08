@@ -1,0 +1,25 @@
+{
+  "policy": { "method": "{method}", "cooldown": "***" },
+  "activities": {
+    "tizen": {
+      "key": "tizen",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "acc": { "key": "ACC", "id": "***" },
+        "raw": { "key": "RAW", "id": "***" },
+        "hrm": { "key": "HRM", "id": "***" },
+        "activity": { "key": "ACTIVITY", "id": "***" }
+      }
+    },
+    "notification": {
+      "key": "feedback",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "action": { "key": "ACTION", "id": "***" },
+        "notification_ts": { "key": "EVENT_TS", "id": "***" }
+      }
+    }
+  }
+}

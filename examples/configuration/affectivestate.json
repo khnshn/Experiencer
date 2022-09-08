@@ -1,0 +1,110 @@
+{
+  "policy": { "method": "{method}", "cooldown": "***" },
+  "questionnaire": {
+    "dataProvider_id": "***",
+    "questions": [
+      {
+        "type": "multiple",
+        "answers": [
+          { "text": "Extremely alert", "value": "***" },
+          { "text": "Very alert", "value": "***" },
+          { "text": "Alert", "value": "***" },
+          { "text": "Rather alert", "value": "***" },
+          { "text": "Neither alert nor sleepy", "value": "***" },
+          { "text": "Some signs of sleepiness", "value": "***" },
+          { "text": "Sleepy, but no effort to keep awake", "value": "***" },
+          { "text": "Sleepy, some effort to keep awake", "value": "***" },
+          {
+            "text": "Very sleepy, great effort keeping awake, fighting sleep",
+            "value": "***"
+          }
+        ],
+        "question": "How alert or sleepy do you feel at the moment?",
+        "property_tk": "LIKERT_SCALE_NINE",
+        "gameDescriptor_tk": "HOW_ALERT_OR_SLEEPY_DO_YOU_FEEL_AT_THE_MOMENT"
+      },
+      {
+        "type": "multiple",
+        "answers": [
+          { "text": "Very energetic", "value": "***" },
+          { "text": "Energetic", "value": "***" },
+          { "text": "Somewhat energetic", "value": "***" },
+          { "text": "Neither energetic nor depleted", "value": "***" },
+          { "text": "Somewhat depleted", "value": "***" },
+          { "text": "Depleted", "value": "***" },
+          { "text": "Very depleted", "value": "***" }
+        ],
+        "question": "How energetic or depleted do you feel at the moment?",
+        "property_tk": "LIKERT_SCALE_SEVEN",
+        "gameDescriptor_tk": "HOW_ENERGETIC_OR_DEPLETED_DO_YOU_FEEL_AT_THE_MOMENT"
+      },
+      {
+        "type": "multiple",
+        "answers": [
+          { "text": "Very stressed", "value": "***" },
+          { "text": "Stressed", "value": "***" },
+          { "text": "Somewhat stressed", "value": "***" },
+          { "text": "Neither stressed nor relaxed", "value": "***" },
+          { "text": "Somewhat relaxed", "value": "***" },
+          { "text": "Relaxed", "value": "***" },
+          { "text": "Very relaxed", "value": "***" }
+        ],
+        "question": "How stressed or relaxed do you feel at the moment?",
+        "property_tk": "LIKERT_SCALE_SEVEN",
+        "gameDescriptor_tk": "HOW_STRESSED_OR_RELAXED_DO_YOU_FEEL_AT_THE_MOMENT"
+      },
+      {
+        "type": "multiple",
+        "answers": [
+          { "text": "Very happy", "value": "***" },
+          { "text": "Happy", "value": "***" },
+          { "text": "Somewhat happy", "value": "***" },
+          { "text": "Neither happy nor sad", "value": "***" },
+          { "text": "Somewhat sad", "value": "***" },
+          { "text": "Sad", "value": "***" },
+          { "text": "Very sad", "value": "***" }
+        ],
+        "question": "How happy or sad do you feel at the moment?",
+        "property_tk": "LIKERT_SCALE_SEVEN",
+        "gameDescriptor_tk": "HOW_HAPPY_OR_SAD_DO_YOU_FEEL_AT_THE_MOMENT"
+      },
+      {
+        "type": "multiple",
+        "answers": [
+          { "text": "Very convenient", "value": "***" },
+          { "text": "Convenient", "value": "***" },
+          { "text": "Somewhat convenient", "value": "***" },
+          { "text": "Neither convenient nor inconvenient", "value": "***" },
+          { "text": "Somewhat inconvenient", "value": "***" },
+          { "text": "Inconvenient", "value": "***" },
+          { "text": "Very inconvenient", "value": "***" }
+        ],
+        "question": "How convenient or inconvenient was the timing of the notification for you?",
+        "property_tk": "LIKERT_SCALE_SEVEN",
+        "gameDescriptor_tk": "HOW_CONVENIENT_OR_INCONVENIENT_WAS_THE_TIMING_OR_THE_NOTIFICATION_FOR_YOU"
+      }
+    ]
+  },
+  "activities": {
+    "tizen": {
+      "key": "tizen",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "acc": { "key": "ACC", "id": "***" },
+        "raw": { "key": "RAW", "id": "***" },
+        "hrm": { "key": "HRM", "id": "***" },
+        "activity": { "key": "ACTIVITY", "id": "***" }
+      }
+    },
+    "notification": {
+      "key": "feedback",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "action": { "key": "ACTION", "id": "***" },
+        "notification_ts": { "key": "EVENT_TS", "id": "***" }
+      }
+    }
+  }
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width,user-scalable=no">
+	<title>Basic</title>
+	<link rel="stylesheet" href="lib/tau/wearable/theme/default/tau.min.css">
+	<link rel="stylesheet" media="all and (-tizen-geometric-shape: circle)"
+		href="lib/tau/wearable/theme/default/tau.circle.min.css">
+	<!-- load theme file for your application -->
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<!-- stores id of feedback prompt -->
+	<input id="process-id" type="text" style="visibility: hidden;" value="" />
+	<div class="ui-page ui-page-active" id="main">
+		<header class="ui-header">
+			<h2 class="ui-title" style="color:rgb(232,113,33)">Experiencer</h2>
+		</header>
+		<div class="ui-content">
+			<div id="ui-content"></div>
+			<p class="steps" style="display: none;">Daily Steps<br /><span id="steps">0</span></p>
+			<p onclick="showLog()">v1.7.4</p>
+			<a class="ui-btn my-btn" href="#" id="feedback" onclick="checkAppControl()"
+				style="background-color: rgba(237,134,0,1); ">
+				SELF-REPORT
+			</a>
+			<div class="ui-popup ui-popup-toast ui-popup-toast-graphic" id="done-popup-toast">
+				<div id="done-message" class="ui-popup-content">
+				</div>
+			</div>
+			<div class="ui-popup" id="log-popup">
+				<div id="log-message" class="ui-popup-content">
+					<ul class="log-list">
+						<li><a href="#">steps_sum</a></li>
+						<li><a href="#">access_token</a></li>
+						<li><a href="#">last_notif</a></li>
+						<li><a href="#">gb_config</a></li>
+						<li><a href="#">db_info</a></li>
+						<li><a href="#">next_alarm</a></li>
+						<li style="background-color: firebrick;"><a href="#">log_out</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="ui-popup" id="login-popup">
+				<div id="login-details" class="ui-popup-content">
+					<div class="ui-grid-row">
+						<input id="input-username" type="text" placeholder="username" />
+						<br />
+						<input id="input-password" type="password" placeholder="password" />
+						<input id="input-login" type="button" class="ui-btn ui-inline" value="Login"
+							onclick="login()" />
+					</div>
+				</div>
+			</div>
+			<div class="ui-popup" id="details-popup">
+				<div id="log-details" class="ui-popup-content">
+				</div>
+			</div>
+			<div class="ui-popup ui-popup-toast" id="info-popup-toast">
+				<div id="info-message" class="ui-popup-content">
+					Please first tap on the notification to self-report. Otherwise, wait for the next notification.
+				</div>
+			</div>
+			<div class="ui-popup" id="preparing-popup">
+				<div class="ui-popup-content">
+					<div class="small-processing-container">
+						<div class="ui-processing" style="-webkit-transform: scale(1.08); position: relative;">
+						</div>
+						<div id="ui-processing-text" class="ui-processing-text"
+							style="position:relative; margin-top: 22px;">
+							Preparing... </div>
+					</div>
+				</div>
+			</div>
+			<div class="ui-popup" id="saving-popup">
+				<div class="ui-popup-content">
+					<div class="small-processing-container">
+						<div class="ui-processing" style="-webkit-transform: scale(1.08); position: relative;">
+						</div>
+						<div id="ui-processing-text" class="ui-processing-text"
+							style="position:relative; margin-top: 22px;">
+							Saving... </div>
+					</div>
+				</div>
+			</div>
+
+			<!-- qr code view -->
+			<div id="qrcodes" onclick="showLogin()"
+				style="background-color: white; padding-top: 25px;  padding-bottom: 25px;">
+				<div id="qrcode-1" style="width: 230px; height: 230px; margin:auto"></div>
+			</div>
+			<!-- START specific for Karin's study -->
+			<a class="ui-btn my-btn" href="#" id="input-time" onclick="inputTime()"
+				style="background-color: rgb(0, 103, 237); ">
+				Input time
+			</a>
+			<div class="ui-popup" id="time-popup">
+				<div id="time-details" class="ui-popup-content">
+					<div class="ui-grid-row">
+						<input style="text-align: center;" id="input-wakeup" type="text" placeholder="08:00" />
+						<br />
+						<input style="text-align: center;" id="input-sleep" type="text" placeholder="22:00" />
+						<input id="save-time" type="button" class="ui-btn ui-inline" value="Save"
+							onclick="saveTime()" />
+					</div>
+				</div>
+			</div>
+			<!-- END specific for Karin's study -->
+			<!-- toast errors -->
+			<div class="ui-popup ui-popup-toast" id="generic-error-popup-toast">
+				<div id="error-message" class="ui-popup-content">
+				</div>
+			</div>
+			<div class="ui-popup" id="error-popup-toast">
+				<div class="ui-popup-content">
+					Network error!<br />
+					Please try again
+				</div>
+				<div class="ui-popup-footer ui-bottom-button">
+					<a class="ui-btn" data-rel="back" href="#" id="error-popup-cancel">
+						OK
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="lib/tau/wearable/js/tau.min.js"></script>
+	<script src="lib/gb/jquery-3.5.1.min.js"></script>
+	<script src="lib/gb/qrcode.js"></script>
+	<script src="config/gb.js"></script>
+	<script src="lib/gb/indexedDB.js"></script>
+	<script src="lib/gb/webservice.js"></script>
+	<script src="lib/gb/questionnaireHelper.js"></script>
+	<script src="js/app.js"></script>
+	<script src="js/lowBatteryCheck.js"></script>
+	<script src="js/circle-helper.js"></script>
+	<script src="lib/gb/customFunctions.js"></script>
+	<script>
+		// var intensity = -1;
+		// var emotion = -1;
+		var showCounter = 0;
+		var logoutCounter = 0;
+		var logoinCounter = 0;
+		function showLogin() {
+			if (showCounter == 4) {
+				tau.openPopup($('#login-popup'));
+				showCounter = 0
+			} else {
+				showCounter++;
+			}
+		}
+		function showLog() {
+			if (showCounter == 4) {
+				tau.openPopup($('#log-popup'));
+				showCounter = 0
+			} else {
+				showCounter++;
+			}
+		}
+		$(document).ready(function () {
+			// $.when(readOne("token", ["settings"])).done(function (data) {
+			// 	if (data == null) {
+			// 		$('#feedback').hide();
+			// 	}
+			// });
+			$.when(readOne("stepsview", ["settings"])).done(function (data) {
+				$("#steps").text(data == null ? 0 : data);
+			})
+			// hidden items
+			$('ul.log-list li a').click(function () {
+				log = $(this).text();
+				if (log == "steps_sum") {
+					$.when(readOne("DA", ["settings"])).done(function (da) {
+						var data = JSON.stringify(da);
+						$.when(readOne("DAW", ["settings"])).done(function (daw) {
+							data += JSON.stringify(daw);
+							$.when(readOne("DAR", ["settings"])).done(function (dar) {
+								data += JSON.stringify(dar);
+								$('#log-details').html("<p>" + (data == "null" ? "No Data" : data) + "</p>");
+								tau.openPopup($('#details-popup'));
+							})
+						})
+					})
+				} else if (log == "access_token") {
+					$.when(readOne("token", ["settings"])).done(function (tn) {
+						var data = tn;
+						$('#log-details').html("<p>" + (data == null ? "No Data" : data) + "</p>");
+						tau.openPopup($('#details-popup'));
+					})
+				} else if (log == "last_notif") {
+					$.when(readOne("NT", ["settings"])).done(function (nf) {
+						var data = nf;
+						$('#log-details').html("<p>" + (data == null ? "No Data" : new Date(parseInt(data)).toString()) + "</p>");
+						tau.openPopup($('#details-popup'));
+					})
+				} else if (log == "gb_config") {
+					$.when(readOne("gb_config", ["settings"])).done(function (cf) {
+						var data = JSON.stringify(cf);
+						$('#log-details').html("<p>" + (data == null ? "No Data" : data) + "</p>");
+						tau.openPopup($('#details-popup'));
+					})
+				} else if (log == "db_info") {
+					$('#log-details').html("<p>Loading...</p>");
+					readAll(["activity"]).then(function (data) {
+						var html = "No Data";
+						if (data.length > 0) {
+							html = "<p>#records:" + data.length + "<br/>" + JSON.stringify(data) + "</p>";
+						}
+						$('#log-details').html(html);
+					});
+					tau.openPopup($('#details-popup'));
+				} else if (log == "next_alarm") {
+					$.when(readOne("alarm", ["settings"])).done(function (am) {
+						var data = am;
+						$('#log-details').html("<p>" + (data == null ? "No Data" : tizen.alarm.get(parseInt(data)).getRemainingSeconds() + "(s) remaining") + "</p>");
+						tau.openPopup($('#details-popup'));
+					})
+				} else if (log == "log_out") {
+					if (logoutCounter == 4) {
+						logoutCounter = 0
+						logout();
+					} else {
+						logoutCounter++;
+					}
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

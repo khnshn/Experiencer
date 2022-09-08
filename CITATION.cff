@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Experiencer: A Smartwatch-based Context-sensitive Experience Sampling Tool Designed for Researchers and Study Participants"
+authors:
+- family-names: "Khanshan"
+  given-names: "Alireza"
+  orcid: "https://orcid.org/0000-0002-9112-4695"
+title: "Experiencer"
+version: 1.0.0
+date-released: 2022-08-30
+url: "https://github.com/khnshn/Experiencer"

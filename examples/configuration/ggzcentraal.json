@@ -1,0 +1,36 @@
+{
+  "policy": { "method": "{method}", "cooldown": "***" },
+  "activities": {
+    "tizen": {
+      "key": "tizen",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "acc": { "key": "ACC", "id": "***" },
+        "raw": { "key": "RAW", "id": "***" },
+        "hrm": { "key": "HRM", "id": "***" },
+        "activity": { "key": "ACTIVITY", "id": "***" }
+      }
+    },
+    "feedback": {
+      "key": "feedback",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "valence_value": { "key": "VALENCE_VALUE", "id": "***" },
+        "arousal_value": { "key": "AROUSAL_VALUE", "id": "***" },
+        "color_value": { "key": "COLOR_VALUE", "id": "***" },
+        "feedback_ts": { "key": "EVENT_TS", "id": "***" }
+      }
+    },
+    "notification": {
+      "key": "feedback",
+      "gameDescriptor": "***",
+      "dataProvider": "***",
+      "properties": {
+        "action": { "key": "ACTION", "id": "***" },
+        "notification_ts": { "key": "EVENT_TS", "id": "***" }
+      }
+    }
+  }
+}
