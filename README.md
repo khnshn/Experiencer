@@ -15,7 +15,7 @@ Experiencer is written in plain JavaScript compatible with Tizen OS v5.5+. The b
 
 ### GameBus
 
-GameBus is a GDPR-oriented EU-based free health platform offered by academics to academics. Although the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well. Interested researchers can [contact us](https://experiencer.eu/contact-us/) to access the pre-built version along with the step-by-step setup guide. Below the essential client-server interactions are explained so that developers can integrated their own back-end.
+GameBus is a GDPR-oriented EU-based free health platform offered by academics to academics. Although the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well. Interested researchers can [contact us](https://experiencer.eu/contact-us/) to access the pre-built version of the Experiencer that is integrated with GameBus along with the step-by-step setup guide. Below the essential client-server interactions are explained so that developers can integrate their own back-end.
 
 ### *For Developers*
 
