@@ -7,7 +7,7 @@
 ## About the Project
 [Experiencer](https://experiencer.eu/) is the outcome of an endeavor to create an ESM solution that benefits both researchers and study participants while leveraging the physiological sensors of commodity-level wearable devices.
 
-Experiencer software has been used in several research studies throughout its evolution. Such studies have been in line with the author's Ph.D. trajectory at the Eindhoven University of Technology (at the future everyday group of the industrial design department, also in collaboration with the human technology interaction group, industrial engineering department, and GGz Centraal). Experiencer is in the development phase and is being altered frequently. However, as we believe in **Openness, Availability, and Security**, we hereby open-source a recent and comparatively stable version of our Tizen smartwatch software, Experiencer, to advocate our blief and support the scientific community. The source code is available under the `src` directory.
+Experiencer software has been used in several research studies throughout its evolution. Such studies have been in line with the author's Ph.D. trajectory at the Eindhoven University of Technology (at the future everyday group of the industrial design department, also in collaboration with the human technology interaction group, industrial engineering department, and GGz Centraal). Experiencer is in the development phase and is being altered frequently. However, as we believe in **Openness, Availability, and Security**, we hereby open-source a recent and comparatively stable version of our Tizen smartwatch software, Experiencer, to advocate our belief and support the scientific community. The source code is available under the `src` directory.
 
 ## Environment
 
