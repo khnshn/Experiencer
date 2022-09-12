@@ -11,24 +11,28 @@ Experiencer software has been used in several research studies throughout its ev
 
 ## Environment
 
-Experiencer is written in plain JavaScript compatible with Tizen OS v5.5+. The back-end of Experience is built on top of [GameBus](https://devdocs.gamebus.eu/). GameBus facilitates data storage and retrieval as well as user authentican and authorization. We have deployed our software onto Samsung Active 2 smartwatches. We use [Samsung Knox](https://www.samsungknox.com/en) to manage our devices remotely (and on-the-fly).
+Experiencer is written in plain JavaScript compatible with Tizen OS v5.5+. The back-end of Experience is built on top of [GameBus](https://devdocs.gamebus.eu/). GameBus facilitates data storage and retrieval as well as user authentication and authorization. We have deployed our software onto Samsung Active 2 smartwatches. We use [Samsung Knox](https://www.samsungknox.com/en) to manage our devices remotely (and on-the-fly).
 
 ### GameBus
 
-GameBus is an GDPR-oriented EU-based free health platform offered by academics to academics. Althoug the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well.
+GameBus is a GDPR-oriented EU-based free health platform offered by academics to academics. Although the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well. Interested researchers can [contact us](https://experiencer.eu/contact-us/) to access the pre-built version along with the step-by-step setup guide. Below the essential client-server interactions are explained so that developers can integrated their own back-end.
+
+### *For Developers*
+
+Before storing data in GameBus via `POST` requests following the [GameBus DevDocs](https://devdocs.gamebus.eu/), a smartwatch (*device*) needs to be assigned to a *participant*, *ESM protocol*, and a *treatment group*. Such process is initiated by calling the `{base_url}/tizen/register/study?policy={treatment_group}` where device ID (retrieved by scanning the QR code shown on the main screen of the app) and ESM protocol name are passed as request body and GameBus user's auth token as request header (Fig.1). The aforementioned process can be used to authenticate a participant as well. Alternatively, Fig.2 shows an authentication flow where username and password can be put in manually.
 
 <figure align="center">
   <img src="https://experiencer.eu/wp-content/uploads/2022/09/activity-diagrams-1.png">
-  <figcaption>Fig.1 - Experiencer-GameBus interaction for authentication scenario 1</figcaption>
+  <figcaption>Fig.1 - Experiencer-GameBus interaction for registration and authentication</figcaption>
 </figure>
 <figure align="center">
   <img src="https://experiencer.eu/wp-content/uploads/2022/09/activity-diagrams-2.png">
-  <figcaption>Fig.2 - Experiencer-GameBus interaction for authentication scenario 2</figcaption>
+  <figcaption>Fig.2 - Experiencer-GameBus interaction for authentication</figcaption>
 </figure>
 
 ### Samsung Knox
 
-Samsung Knox License enables access to Knox Configure where creating profiles and assiging such profiles to watches can be handeled remotely and real time. Profiles are a conveniet way to install custom apps (e.g., Experiencer) and configure watches. e.g., enable/disable device features, registering specific networks, restricting users to change settings, etc.
+Samsung Knox License enables access to [Knox Configure](https://www.samsungknox.com/en/solutions/it-solutions/knox-configure) where creating profiles and assiging such profiles to watches can be handeled remotely and real time. Profiles are a conveniet way to install custom apps (e.g., Experiencer) and configure watches. e.g., enable/disable device features, registering specific networks, restricting users to change settings, etc.
 
 ### Built with
 
