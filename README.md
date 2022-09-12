@@ -15,11 +15,11 @@ Experiencer is written in plain JavaScript compatible with Tizen OS v5.5+. The b
 
 ### GameBus
 
-GameBus is a GDPR-oriented EU-based free health platform offered by academics to academics. Although the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well. Interested researchers can [contact us](https://experiencer.eu/contact-us/) to access the pre-built version of the Experiencer that is integrated with GameBus along with the step-by-step setup guide. Below the essential client-server interactions are explained so that developers can integrate their own back-end.
+GameBus is a GDPR-oriented EU-based free health platform offered by academics to academics. Although the GameBus is not open-source (yet), the Experiencer can in principle work with other backends as well. Interested researchers can [contact us](https://experiencer.eu/contact-us/) to access the pre-built version of the Experiencer that is integrated with GameBus along a the step-by-step setup guide to run their experiment with Experiencer.
 
 ### *For Developers*
 
-Before storing data in GameBus via `POST` requests following the [GameBus DevDocs](https://devdocs.gamebus.eu/), a smartwatch (*device*) needs to be assigned to a *participant*, *ESM protocol*, and a *treatment group*. Such process is initiated by calling the `{base_url}/tizen/register/study?policy={treatment_group}` where device ID (retrieved by scanning the QR code shown on the main screen of the app) and ESM protocol name are passed as request body and GameBus user's auth token as request header (Fig.1). The aforementioned process can be used to authenticate a participant as well. Alternatively, Fig.2 shows an authentication flow where username and password can be put in manually.
+Below the essential client-server interactions are explained so that developers can integrate their own back-end. Before storing data in GameBus via `POST` requests following the [GameBus DevDocs](https://devdocs.gamebus.eu/), a smartwatch (*device*) needs to be assigned to a *participant*, *ESM protocol*, and a *treatment group*. Such process is initiated by calling the `{base_url}/tizen/register/study?policy={treatment_group}` where device ID (retrieved by scanning the QR code shown on the main screen of the app) and ESM protocol name are passed as request body and GameBus user's auth token as request header (Fig.1). The aforementioned process can be used to authenticate a participant as well. Alternatively, Fig.2 shows an authentication flow where username and password can be put in manually.
 
 <figure align="center">
   <img src="https://experiencer.eu/wp-content/uploads/2022/09/activity-diagrams-1.png">
@@ -32,7 +32,7 @@ Before storing data in GameBus via `POST` requests following the [GameBus DevDoc
 
 ### Samsung Knox
 
-Samsung Knox License enables access to [Knox Configure](https://www.samsungknox.com/en/solutions/it-solutions/knox-configure) where creating profiles and assiging such profiles to watches can be handeled remotely and real time. Profiles are a conveniet way to install custom apps (e.g., Experiencer) and configure watches. e.g., enable/disable device features, registering specific networks, restricting users to change settings, etc.
+Samsung Knox License enables access to [Knox Configure](https://www.samsungknox.com/en/solutions/it-solutions/knox-configure) where creating profiles and assiging such profiles to watches can be handeled remotely and in real time. Profiles are a conveniet way to install custom apps (e.g., Experiencer) and configure watches. i.e., enable/disable device features, manage network connection, restrict users to change settings, etc.
 
 ### Built with
 
@@ -41,8 +41,8 @@ Samsung Knox License enables access to [Knox Configure](https://www.samsungknox.
 * [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
 
 ## Case Studies
-Examples of consumed configuration files to facilitate research execution in some of the research studies are accessible under the `examples/configuration` directory.
-The unique identifiers and various string literals within the configurations that correspond to unpublished research are obfuscated to preserve the author's rights. Meanwhile, the configuration structure is intact, as consumed in the real study.
+Examples of consumed configuration files to facilitate research execution in some of our research studies are accessible under the `examples/configuration` directory.
+The unique identifiers and various string literals within the configurations that correspond to unpublished research are obfuscated to preserve the authors' rights. Meanwhile, the configuration structure is intact, as consumed in the real study.
 
 
 
