@@ -14,8 +14,8 @@
     />
     </tizen:app-control>
     <tizen:application
-    id="NDLfqWiZ8Z.ActivityListener"
-    package="NDLfqWiZ8Z"
+    id="APP_ID..ActivityListener"
+    package="APP_ID."
     required_version="5.5"
   />
     <content src="index.html" />
