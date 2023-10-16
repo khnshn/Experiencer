@@ -61,3 +61,37 @@ ul.log-list li:hover{
 	border-radius: 3.75rem;
 	margin-bottom: 12px;
 }
+
+.ggz-btn {
+	background-color: rgb(0, 173, 43) !important;
+    width: 70% !important;
+    margin: auto !important;
+    border-radius: 50px !important;
+    border: 2px soild blue !important;
+    border: .1875rem solid #009af9 !important;
+    border-radius: 3.75rem !important;
+    height: 65px !important;
+    line-height: 3.75rem !important;
+}
+
+/* .ggz-slider{
+	margin: auto;
+	width: 100%;
+	margin-top: 20%;
+}
+
+.ggz-slider::-webkit-slider-thumb {
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	width: 25px !important;
+	height: 25px !important;
+	border-radius: 50% !important;
+	background: #4CAF50 !important;
+  }
+  
+  .slider::-moz-range-thumb {
+	width: 25px !important;
+	height: 25px !important;
+	border-radius: 50% !important;
+	background: #4CAF50 !important;
+  } */

@@ -3,7 +3,7 @@
   xmlns="http://www.w3.org/ns/widgets"
   xmlns:tizen="http://tizen.org/ns/widgets"
   id="http://yourdomain/ActivityListener"
-  version="1.7.4"
+  version="3.0.0"
   viewmodes="maximized"
 >
     <access origin="*" subdomains="true" />
@@ -14,8 +14,8 @@
     />
     </tizen:app-control>
     <tizen:application
-    id="APP_ID.ActivityListener"
-    package="APP_ID"
+    id="NDLfqWiZ8Z.ActivityListener"
+    package="NDLfqWiZ8Z"
     required_version="5.5"
   />
     <content src="index.html" />

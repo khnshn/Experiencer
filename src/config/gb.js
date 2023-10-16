@@ -1,5 +1,5 @@
 var config = {
-  BASE_URL: "https://api4.gamebus.eu/v2", //"https://api4.gamebus.eu/v2", //"http://192.168.0.106:8024/v2", //"https://api3.gamebus.eu/v2",
+  BASE_URL: "https://api-new.gamebus.eu/v2",
   CONFIG_ENDPOINT: "/wearables/tizen/config",
   ACITIVTY_ENDPOINT: "/activities?dryrun=false",
   SNOOZE_ENDPOINT: "/wearables/tizen/snooze",
@@ -11,5 +11,4 @@ var config = {
   PEDOMETER_INTERVAL: 60000,
   TIZEN_PUSH: false,
   SYNC_STEPS: false,
-  AUTH_TOKEN: "your token goes here",
 };

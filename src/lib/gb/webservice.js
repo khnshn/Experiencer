@@ -9,7 +9,6 @@ function onWifiData(wifiData) {
   console.log(
     `webservice::WiFi strength: ${wifiData.signalStrength}; WiFi status: ${wifiData.status}`
   );
-  console.log("webservice: cancelled wifi opertation");
   console.log(
     "webservice::Checking previous ajax batch: " +
       ajaxCalls.length +
@@ -94,28 +93,11 @@ function onWifiData(wifiData) {
                     ajaxCalls.length
                 );
                 return;
-              } else if (value.eventType === "gb_activity") {
-                var activitytData = value.eventData;
-                for (var i = 0; i < activitytData.length; i++) {
-                  fd.append(
-                    "activity",
-                    '{"gameDescriptorTK":"' +
-                      activitytData[i].gd_tk +
-                      '","dataProvider":' +
-                      gb_config.activities.tizen.dataProvider +
-                      ',"date":' +
-                      value.eventOccuredAt +
-                      ',"propertyInstances":' +
-                      JSON.stringify(activitytData[i].properties) +
-                      ',"players":[]}'
-                  );
-                }
               } else {
                 console.log("webservice::Unrecognizable entity");
                 return;
               }
-              if (value.eventType === "gb_activity") {
-              } else if (properties === null) {
+              if (properties === null) {
                 fd.append(
                   "activity",
                   '{"gameDescriptor":' +
@@ -123,7 +105,7 @@ function onWifiData(wifiData) {
                     ',"dataProvider":' +
                     dataProvider +
                     ',"date":' +
-                    value.eventOccuredAt +
+                    new Date().getTime() +
                     ',"propertyInstances":[{"property":' +
                     property +
                     ',"value":"' +
@@ -139,7 +121,7 @@ function onWifiData(wifiData) {
                       ',"dataProvider":' +
                       dataProvider +
                       ',"date":' +
-                      value.eventOccuredAt +
+                      new Date().getTime() +
                       ',"propertyInstances":[{"property":' +
                       properties.action.id +
                       ',"value":"' +
@@ -158,7 +140,7 @@ function onWifiData(wifiData) {
                       ',"dataProvider":' +
                       dataProvider +
                       ',"date":' +
-                      value.eventOccuredAt +
+                      new Date().getTime() +
                       ',"propertyInstances":[{"property":' +
                       properties.state_key.id +
                       ',"value":"' +
@@ -172,6 +154,37 @@ function onWifiData(wifiData) {
                       ',"value":' +
                       value.eventOccuredAt +
                       '}],"players":[]}'
+                  );
+                } else if (properties.hasOwnProperty("valence_value")) {
+                  fd.append(
+                    "activity",
+                    '{"gameDescriptor":' +
+                      gameDescriptor +
+                      ',"dataProvider":' +
+                      dataProvider +
+                      ',"date":' +
+                      new Date().getTime() +
+                      ',"propertyInstances":[{"property":' +
+                      properties.wasted_value.id +
+                      ',"value":"' +
+                      value.eventData.wasted +
+                      '"},{"property":' +
+                      properties.valence_value.id +
+                      ',"value":"' +
+                      value.eventData.valence +
+                      '"},{"property":' +
+                      properties.arousal_value.id +
+                      ',"value":"' +
+                      value.eventData.arousal +
+                      '"},{"property":' +
+                      properties.feedback_ts.id +
+                      ',"value":' +
+                      value.eventOccuredAt +
+                      '},{"property":' +
+                      properties.location_value.id +
+                      ',"value":"' +
+                      value.eventData.location +
+                      '"}],"players":[]}'
                   );
                 } else {
                   console.log("webservice::Unrecognizable entity");

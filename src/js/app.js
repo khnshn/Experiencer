@@ -2,6 +2,7 @@
  * Global variables
  */
 var message = "Please click on `open app` below first and then `Self-report`";
+var backToemotionPopUp = false;
 var disablebBackButton = false;
 var gb_config;
 var sensorStartTime;
@@ -12,42 +13,6 @@ var typ;
 // sensor data will be appended to these, cleared after storage in db
 var hrm_array = [];
 var ppg_array = [];
-// var example_3 = {
-//   // to be fetched from the config file later
-//   dataProvider_id: 13,
-//   questions: [
-//     {
-//       type: "multiple",
-//       answers: [
-//         { text: "Extremely alert", value: 1 },
-//         { text: "Alert", value: 2 },
-//         { text: "Neither alert nor sleepy", value: 2 },
-//         { text: "Sleepy, but no difficulty remaining awake", value: 3 },
-//         { text: "Extremely sleepy, fighting sleep", value: 4 },
-//       ],
-//       question: "How alert of sleepy do you feel at the moment?",
-//       property_tk: "ALERT_OR_SLEEPY_ANSWER",
-//       gameDescriptor_tk: "HOW_ALERT_OR_SLEEPY_DO_YOU_FEEL_AT_THE_MOMENT",
-//     },
-//     {
-//       type: "multiple",
-//       answers: [
-//         { text: "Very convenient", value: 1 },
-//         { text: "Convenient", value: 2 },
-//         { text: "Somewhat convenient", value: 2 },
-//         { text: "Neither convenient nor inconvenient", value: 3 },
-//         { text: "Somewhat inconvenient", value: 4 },
-//         { text: "Inconvenient", value: 5 },
-//         { text: "Very inconvenient", value: 6 },
-//       ],
-//       question:
-//         "How convenient or inconvenient was the timing of the notification for you?",
-//       property_tk: "CONVENIENT_OR_INCONVENIENT_ANSWER",
-//       gameDescriptor_tk:
-//         "HOW_CONVENIENT_OR_INCONVENIENT_WAS_THE_TIMING_OR_THE_NOTIFICATION_FOR_YOU",
-//     },
-//   ],
-// };
 var acc_array = [];
 // same as notification id
 var sensor_key;
@@ -61,129 +26,6 @@ var hrm_added = false;
 var ppg_added = false;
 var acc_added = false;
 /*
- * prepare UI
- */
-function prepareUI() {
-  // prepare the UI of questionnaire
-  var question_ids = [];
-  var selector = "#ui-content";
-  var item_selector = " > div > ul > li > a";
-  $(selector).empty();
-  var questions = parseJson(gb_config.questionnaire.questions); // TODO: fetch it from the config
-  question_ids = prepareQuestions(questions, selector);
-  // 0
-  var firstPopUpToGetRead = document.getElementById("q-1");
-  firstPopUpToGetRead.addEventListener("popupshow", function () {
-    add(
-      {
-        eventKey: Number($("#process-id").val()),
-        eventType: "ntf",
-        eventOccuredAt: new Date().getTime(),
-        eventData: { action: "READ" },
-      },
-      ["activity"]
-    );
-  });
-  $("#" + question_ids[0] + item_selector).click(function () {
-    var clickedVal = $(this).data("val");
-    var clickedGd = $(this).data("gd");
-    var clickedTk = $(this).data("tk");
-    add(
-      {
-        eventKey: new Date().getTime(),
-        eventType: "gb_activity",
-        eventOccuredAt: new Date().getTime(),
-        eventData: [
-          {
-            gd_tk: clickedGd,
-            properties: [{ propertyTK: clickedTk, value: clickedVal }],
-          },
-        ],
-      },
-      ["activity"]
-    );
-  });
-  // 1..n-2
-  for (let i = 1; i < question_ids.length - 1; i++) {
-    $("#" + question_ids[i] + item_selector).click(function () {
-      var clickedVal = $(this).data("val");
-      var clickedGd = $(this).data("gd");
-      var clickedTk = $(this).data("tk");
-      add(
-        {
-          eventKey: new Date().getTime(),
-          eventType: "gb_activity",
-          eventOccuredAt: new Date().getTime(),
-          eventData: [
-            {
-              gd_tk: clickedGd,
-              properties: [{ propertyTK: clickedTk, value: clickedVal }],
-            },
-          ],
-        },
-        ["activity"]
-      );
-    });
-  }
-  //n-1
-  $("#" + question_ids[question_ids.length - 1] + item_selector).click(
-    function () {
-      var clickedVal = $(this).data("val");
-      var clickedGd = $(this).data("gd");
-      var clickedTk = $(this).data("tk");
-      add(
-        {
-          eventKey: new Date().getTime(),
-          eventType: "gb_activity",
-          eventOccuredAt: new Date().getTime(),
-          eventData: [
-            {
-              gd_tk: clickedGd,
-              properties: [{ propertyTK: clickedTk, value: clickedVal }],
-            },
-          ],
-        },
-        ["activity"]
-      );
-      toastSaving();
-      // $(document).trigger("feedbackEvent", { "emotion": emotion + 1, "intensity": intensity + 1 });
-    }
-  );
-  // for (let i = 0; i < question_ids.length; i++) {
-  //   $("#" + question_ids[i]).addEventListener("popupshow", function () {
-  //     console.log("`popupshow` fired");
-  //     $(".ui-popup-wrapper").scrollTop(0);
-  //   });
-  // }
-}
-function toastDone() {
-  var messages = [
-    "You are the best",
-    "You rock",
-    "Bravo zulu",
-    "keep it coming",
-    "Lovely jubbly",
-    "Awesome possum",
-    "Nicely done",
-    "You did it",
-  ];
-  $("#done-message").html(
-    '<div class="ui-popup-toast-icon ui-popup-toast-check-icon"></div>' +
-      messages[Math.round(Math.random() * 10) % messages.length] +
-      "!"
-  );
-  tau.openPopup($("#done-popup-toast"));
-}
-function toastSaving() {
-  disablebBackButton = true;
-  tau.openPopup($("#saving-popup"));
-  setTimeout(() => {
-    disablebBackButton = false;
-    tau.closePopup($("#saving-popup"));
-    toastDone();
-  }, 10000);
-}
-/*
  * init gb_config
  */
 $.when(readOne("gb_config", ["settings"])).done(function (data) {
@@ -194,6 +36,11 @@ $.when(readOne("gb_config", ["settings"])).done(function (data) {
 /*
  * Event listeners
  */
+var emotionPopup = document.getElementById("emotion-popup");
+var intensityPopup = document.getElementById("intensity-popup");
+var wastedPopup = document.getElementById("wasted-popup");
+var colorsPopup = document.getElementById("colors-popup");
+// var addEmotionPopup = document.getElementById("add-emotion-popup");
 var preparingPopup = document.getElementById("preparing-popup");
 var doneToast = document.getElementById("done-popup-toast");
 var infoToast = document.getElementById("info-popup-toast");
@@ -206,7 +53,85 @@ doneToast.addEventListener("popuphide", function () {
   console.log("`popuphide` fired");
   tizen.application.getCurrentApplication().hide();
 });
-
+//ggz centraal
+colorsPopup.addEventListener("popupbeforeshow", function () {
+  colorSlider.value(colorValue == -1 ? 6 : colorValue);
+  var color = "black";
+  var location = "";
+  switch (colorValue) {
+    case 1:
+      location = "RONDA";
+      break;
+    case 2:
+      location = "PANDORA";
+      break;
+    case 3:
+      location = "KF HEIN FOYER";
+      break;
+    case 4:
+      location = "PLEIN 6";
+      break;
+    case 5:
+      location = "DE PUNT";
+      break;
+    case 6:
+      location = "HERTZ";
+      break;
+    case 7:
+      location = "CLOUD NINE";
+      break;
+    case 8:
+      location = "DE PIT";
+      break;
+    case 9:
+      location = "Slachthuis";
+      break;
+    case 10:
+      location = "CLUB NINE";
+      break;
+    case 11:
+      location = "Other";
+      break;
+    default:
+      location = "HERTZ";
+      color = "black";
+  }
+  $("#colors-popup").css("background-color", color);
+  $("#location-name").text(location);
+});
+//
+emotionPopup.addEventListener("popupbeforeshow", function () {
+  //ggz centraal
+  valenceSlider.value(emotion == -1 ? "5" : String(emotion));
+  //
+  console.log("`popupbeforeshow` fired");
+  //remove li(s)
+  // $(".my-emotion").remove();
+  // //add emotions
+  // $.when(readOne("EM", ["settings"])).done(function (raw_emotions) {
+  //   var emotions = raw_emotions == null ? [] : JSON.parse(raw_emotions);
+  //   for (var i = 0; i < emotions.length; i++) {
+  //     $(".pre-list").prepend(
+  //       `<li class="my-emotion"><a data-rel="popup" href="#intensity-popup" onclick="manulEmotionClick('${emotions[i]}')">${emotions[i]}</a></li>`
+  //     );
+  //   }
+  // });
+});
+emotionPopup.addEventListener("popupshow", function () {
+  console.log("`popupshow` fired");
+  // re-enable back button
+  disablebBackButton = false;
+  add(
+    {
+      eventKey: Number($("#process-id").val()),
+      eventType: "ntf",
+      eventOccuredAt: new Date().getTime(),
+      eventData: { action: "READ" },
+    },
+    ["activity"]
+  );
+  $(".ui-popup-wrapper").scrollTop(0);
+});
 preparingPopup.addEventListener("popupbeforeshow", function () {
   console.log("`popupbeforeshow` fired");
   // disable back press
@@ -215,15 +140,39 @@ preparingPopup.addEventListener("popupbeforeshow", function () {
   sensorForceStop = false;
   startSensors();
 });
-
+// addEmotionPopup.addEventListener("popupbeforeshow", function () {
+//   console.log("`popupbeforeshow` fired");
+//   backToemotionPopUp = true;
+// });
+intensityPopup.addEventListener("popupbeforeshow", function () {
+  //ggz centraal
+  arousalSlider.value(intensity == -1 ? "5" : String(intensity));
+  //
+  console.log("`popupbeforeshow` fired");
+  backToemotionPopUp = true;
+});
+intensityPopup.addEventListener("popupshow", function () {
+  console.log("`popupshow` fired");
+  $(".ui-popup-wrapper").scrollTop(0);
+});
+wastedPopup.addEventListener("popupbeforeshow", function () {
+  //ggz centraal
+  wastedSlider.value(wasted == -1 ? "5" : String(wasted));
+  //
+  console.log("`popupbeforeshow` fired");
+  backToemotionPopUp = true;
+});
+wastedPopup.addEventListener("popupshow", function () {
+  console.log("`popupshow` fired");
+  $(".ui-popup-wrapper").scrollTop(0);
+});
 $(document).on("popupEvent", { type: "UI" }, function (event, data) {
   $("#process-id").val(data);
-  prepareUI(); // new addition to create dynamic questionnaire
   tau.openPopup(preparingPopup);
   setTimeout(() => {
     tau.closePopup(preparingPopup);
-    tau.openPopup($("#q-1")); // open the first question in the set of questionnaires
-  }, 7000);
+    tau.openPopup(emotionPopup);
+  }, 3000);
 });
 $(document).on("popupInfoEvent", { type: "UI" }, function (event, data) {
   tau.openPopup(infoToast);
@@ -236,6 +185,29 @@ $(document).on("feedbackEvent", { type: "UI" }, function (event, data) {
       eventType: "fdbk",
       eventOccuredAt: new Date().getTime(),
       eventData: data,
+    },
+    ["activity"]
+  );
+});
+$(document).on("snoozeEvent", { type: "UI" }, function (event, data) {
+  console.log("`snoozeEvent` for " + $("#process-id").val() + " fired");
+  // to later send to notification endpoint
+  add(
+    {
+      eventKey: Number($("#process-id").val()),
+      eventType: "snz",
+      eventOccuredAt: new Date().getTime(),
+      eventData: {},
+    },
+    ["activity"]
+  );
+  // to later send as an activity
+  add(
+    {
+      eventKey: Number($("#process-id").val()),
+      eventType: "ntf",
+      eventOccuredAt: new Date().getTime(),
+      eventData: { action: "SNOOZED" },
     },
     ["activity"]
   );
@@ -331,12 +303,7 @@ function onHrmChange(hrmInfo) {
     if (!hrm_added) {
       hrm_added = true;
       add(
-        {
-          eventKey: sensor_key,
-          eventOccuredAt: new Date().getTime(),
-          eventType: "hrm",
-          eventData: hrm_array,
-        },
+        { eventKey: sensor_key, eventType: "hrm", eventData: hrm_array },
         ["activity"],
         function () {
           console.log("indexedDB::add()::callback()");
@@ -363,12 +330,7 @@ function onPpgChange(ppgInfo) {
     if (!ppg_added) {
       ppg_added = true;
       add(
-        {
-          eventKey: sensor_key,
-          eventOccuredAt: new Date().getTime(),
-          eventType: "raw",
-          eventData: ppg_array,
-        },
+        { eventKey: sensor_key, eventType: "raw", eventData: ppg_array },
         ["activity"],
         function () {
           console.log("indexedDB::add()::callback()");
@@ -392,12 +354,7 @@ function onAccChange(accInfo) {
     if (!acc_added) {
       acc_added = true;
       add(
-        {
-          eventKey: sensor_key,
-          eventOccuredAt: new Date().getTime(),
-          eventType: "acc",
-          eventData: acc_array,
-        },
+        { eventKey: sensor_key, eventType: "acc", eventData: acc_array },
         ["activity"],
         function () {
           console.log("indexedDB::add()::callback()");
@@ -426,7 +383,8 @@ function refreshToken() {
     method: "POST",
     timeout: 0,
     headers: {
-      Authorization: AUTH_TOKEN,
+      Authorization:
+        "Basic Z2FtZWJ1c19iYXNlX2FwcDppdkFxTFNSSnBRaDJ4QzE4OVYySEFvblVXWmd4UnVZQg==",
       "Content-Type": "application/x-www-form-urlencoded",
     },
     data: {
@@ -549,113 +507,6 @@ function checkAlarm() {
     } else {
       console.log("No alarm");
       makeAlarm();
-    }
-  });
-}
-function saveSteps() {
-  if (!config.SYNC_STEPS) {
-    return false;
-  }
-  $.when(readOne("last_pedometer", ["settings"])).done(function (data) {
-    var date = new Date();
-    if (data == null) {
-      var last_pedometer = parseInt(
-        new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          0,
-          0,
-          0
-        ).getTime() / 1000
-      );
-      update({ key: "last_pedometer", value: last_pedometer }, ["settings"]);
-    } else {
-      var last_pedometer = data;
-    }
-    var query = {
-      startTime: last_pedometer,
-      endTime: parseInt(date.getTime() / 1000),
-    };
-    console.log(query);
-    update({ key: "last_pedometer", value: query.endTime }, ["settings"]);
-    tizen.humanactivitymonitor.readRecorderData(
-      "PEDOMETER",
-      query,
-      function (data) {
-        console.log(data);
-        data = data[0];
-        var da = data.totalStepCount;
-        var daw = data.walkStepCount;
-        var dar = data.runStepCount;
-        saveStepsByType(da, "DA");
-        saveStepsByType(daw, "DAW");
-        saveStepsByType(dar, "DAR");
-      },
-      function (error) {
-        console.log(error.name + ": " + error.message);
-      }
-    );
-  });
-}
-function saveStepsByType(accumulativeTotalXCount, type) {
-  $.when(readOne(type, ["settings"])).done(function (data) {
-    var date = new Date();
-    var dayAggregates = data == null ? null : JSON.parse(data);
-    if (dayAggregates == null) {
-      // add first one
-      var da = {
-        year: date.getFullYear(),
-        month: date.getMonth() + 1,
-        day: date.getDate(),
-        steps: accumulativeTotalXCount,
-        synced: false,
-      };
-      if (type == "DA") {
-        $("#steps").text(accumulativeTotalXCount);
-        update({ key: "stepsview", value: accumulativeTotalXCount }, [
-          "settings",
-        ]);
-      }
-      update({ key: type, value: JSON.stringify([da]) }, ["settings"]);
-    } else {
-      // update existing one
-      var notfound = true;
-      for (var i = 0; i < dayAggregates.length; i++) {
-        if (
-          dayAggregates[i].year == date.getFullYear() &&
-          dayAggregates[i].month == date.getMonth() + 1 &&
-          dayAggregates[i].day == date.getDate()
-        ) {
-          notfound = false;
-          dayAggregates[i].steps =
-            dayAggregates[i].steps + accumulativeTotalXCount;
-          if (type == "DA") {
-            $("#steps").text(dayAggregates[i].steps);
-            update({ key: "stepsview", value: dayAggregates[i].steps }, [
-              "settings",
-            ]);
-          }
-          break;
-        }
-      }
-      if (notfound) {
-        // add new one
-        dayAggregates.push({
-          year: date.getFullYear(),
-          month: date.getMonth() + 1,
-          day: date.getDate(),
-          steps: accumulativeTotalXCount,
-          synced: false,
-        });
-        if (type == "DA") {
-          $("#steps").text(accumulativeTotalXCount);
-          update({ key: "stepsview", value: accumulativeTotalXCount }, [
-            "settings",
-          ]);
-        }
-      }
-      update({ key: type, value: JSON.stringify(dayAggregates) }, ["settings"]);
     }
   });
 }
@@ -883,7 +734,7 @@ function notify(data, removePrev = true) {
       content: data.content,
       images: {
         iconPath:
-          "/opt/usr/globalapps/APP_ID/shared/res/APP_ID.ActivityListener.png",
+          "/opt/usr/globalapps/NDLfqWiZ8Z/shared/res/NDLfqWiZ8Z.ActivityListener.png",
       },
       actions: {
         soundPath: "music/Over the horizon.mp3",
@@ -934,6 +785,30 @@ function requestPermission(
     }
   }
 }
+function onchangedHrm(hrmInfo) {
+  if (!canSetMonitor) {
+    return;
+  }
+  // console.log(
+  //   `{"hr":${hrmInfo.heartRate},"ppi":${
+  //     hrmInfo.rRInterval
+  //   },"ts":${new Date().getTime()}}`
+  // );
+  console.log("recording HRM");
+  hrmCounter++;
+  if (hrmCounter == 300) {
+    console.log("stopping HRM");
+    /* Stop the sensor after detecting a few changes */
+    tizen.humanactivitymonitor.stop("HRM");
+    if (canSetMonitor) {
+      canSetMonitor = false;
+      console.log("call monitor() after 1 minute");
+      setTimeout(function () {
+        monitor();
+      }, 60000);
+    }
+  }
+}
 function onchangedPedometer(pedometerInfo) {
   console.log("onchangedPedometer()");
   var data = {
@@ -951,45 +826,16 @@ function onchangedPedometer(pedometerInfo) {
   console.log(JSON.stringify(data));
   var id = new Date().getTime();
   sensor_key = id;
-  add(
-    {
-      eventKey: id,
-      eventOccuredAt: new Date().getTime(),
-      eventType: "activity",
-      eventData: data,
-    },
-    ["activity"]
-  );
-  saveSteps();
-  // send reminder regardless of activity
-  var startTime = 8;
-  var endTime = 22;
-  var startTimeString = "8:00";
-  var endTimeString = "22:00";
-  // specific for Karin's ESM
-  if (localStorage.hasOwnProperty("wakeup")) {
-    startTime = Number(localStorage.getItem("wakeup").split(":")[0]);
-    startTimeString = localStorage.getItem("wakeup");
-  }
-  if (localStorage.hasOwnProperty("sleep")) {
-    endTime = Number(localStorage.getItem("sleep").split(":")[0]);
-    endTimeString = localStorage.getItem("sleep");
-  }
-  if (startTime >= endTime) {
-    // e.g. start 8:00, end 1:00
-    endTime = 24 + endTime;
-  }
-  // calculate randTime
-  var randTime =
-    ((endTime - startTime) / (8 + 1)) * 60 * 60 * 1000 -
-    gb_config.policy.cooldown;
-  // extra notification to remind morning diary
-  sendReminder(startTimeString);
+  add({ eventKey: id, eventType: "activity", eventData: data }, ["activity"]);
+  // saveSteps();
   if (
-    (pedometerInfo.stepStatus == "UNKNOWN" &&
-      gb_config.policy.method.toUpperCase() == "UNKNOWN") ||
-    (pedometerInfo.stepStatus != "UNKNOWN" &&
-      gb_config.policy.method.toUpperCase() == "KNOWN")
+    (pedometerInfo.stepStatus === "NOT_MOVING" &&
+      gb_config.policy.method === "SMART") ||
+    (((pedometerInfo.stepStatus == "UNKNOWN" && pedometerInfo.speed > 10) ||
+      pedometerInfo.stepStatus == "RUNNING" ||
+      pedometerInfo.stepStatus == "WALKING") &&
+      gb_config.policy.method === "STUPID") ||
+    gb_config.policy.method === "FIXED_INTERVAL"
   ) {
     $.when(readOne("NT", ["settings"])).done(function (data) {
       var notifTime;
@@ -999,11 +845,7 @@ function onchangedPedometer(pedometerInfo) {
       } else {
         notifTime = parseInt(data);
       }
-      var checkTime = new Date().getTime() - notifTime;
-      // check if in interval
-      var beepPossible = shallIBeep(startTimeString, endTimeString, new Date());
-      // end check
-      if (checkTime > gb_config.policy.cooldown + randTime && beepPossible) {
+      if (new Date().getTime() - notifTime > gb_config.policy.cooldown) {
         notify({
           id: id,
           type: pedometerInfo.stepStatus,
@@ -1049,217 +891,6 @@ function monitor() {
 }
 function init() {
   console.log("init()");
-  setTimeout(function syncSteps() {
-    if (!config.SYNC_STEPS) {
-      return false;
-    }
-    var today = new Date();
-    var time =
-      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    console.log("syncSteps()::tick " + time);
-    $.when(readOne("DA", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DA"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DA"
-              );
-            }
-          }
-        }
-      }
-    });
-    $.when(readOne("DAW", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DAW"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DAW"
-              );
-            }
-          }
-        }
-      }
-    });
-    $.when(readOne("DAR", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DAR"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DAR"
-              );
-            }
-          }
-        }
-      }
-    });
-    setTimeout(syncSteps, 60000);
-  }, 60000);
   setTimeout(getWifiInfo, config.WIFI_INTERVAL);
   //  Connect to push service
   tizen.push.connect(
@@ -1272,99 +903,6 @@ function init() {
     "http://tizen.org/privilege/healthinfo",
     startPedometerRecorder
   );
-}
-function sendReminder(start) {
-  $.when(readOne("REMINDER", ["settings"])).done(function (data) {
-    var _30minutes = 1800000;
-    var startTime = new Date();
-    startTime.setHours(
-      Number(start.split(":")[0]),
-      Number(start.split(":")[1]),
-      0,
-      0
-    );
-    var reminderTime = new Date(startTime.getTime() + _30minutes).getTime();
-    if (data == null) {
-      if (new Date().getTime() >= reminderTime) {
-        notify({
-          id: new Date().getTime(),
-          type: "reminder",
-          content: "This is a gentle reminder to fill out your diary",
-        });
-        update({ key: "REMINDER", value: reminderTime }, ["settings"]);
-        add(
-          {
-            eventKey: id,
-            eventType: "ntf",
-            eventOccuredAt: new Date().getTime(),
-            eventData: { action: "REMINDER" },
-          },
-          ["activity"]
-        );
-      }
-    } else {
-      lastReminderTime = parseInt(data);
-      if (
-        lastReminderTime != reminderTime &&
-        new Date().getTime() >= reminderTime
-      ) {
-        notify({
-          id: new Date().getTime(),
-          type: "reminder",
-          content: "This is a gentle reminder to fill out your diary",
-        });
-        update({ key: "REMINDER", value: reminderTime }, ["settings"]);
-        add(
-          {
-            eventKey: id,
-            eventType: "ntf",
-            eventOccuredAt: new Date().getTime(),
-            eventData: { action: "REMINDER" },
-          },
-          ["activity"]
-        );
-      }
-    }
-  });
-}
-function shallIBeep(start, end, current) {
-  var startHour = Number(start.split(":")[0]);
-  var startMinute = Number(start.split(":")[1]);
-  var endHour = Number(end.split(":")[0]);
-  var endMinute = Number(end.split(":")[1]);
-  var currentHour = current.getHours();
-  var currentMinute = current.getMinutes();
-  console.log(
-    "shallIBeep()::",
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    currentHour,
-    currentMinute
-  );
-  if (startHour < endHour) {
-    if (currentHour > startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour == startHour && currentMinute > startMinute) {
-      return true;
-    } else if (currentHour == endHour && currentMinute < endMinute) {
-      return true;
-    }
-  } else if (startHour > endHour) {
-    if (currentHour < startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour > startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour > startHour && currentHour > endHour) {
-      return true;
-    } else if (currentHour == startHour && currentMinute > startMinute) {
-      return true;
-    } else if (currentHour == endHour && currentMinute < endMinute) {
-      return true;
-    }
-  }
-  return false;
 }
 function startPedometerRecorder() {
   console.log("startPedometerRecorder()");
@@ -1399,6 +937,11 @@ function main() {
       }
     );
   }
+  //todo: remove the code below
+  setTimeout(function () {
+    $("#qrcodes").hide();
+    $("#feedback").show();
+  }, 2000);
 }
 
 (function () {
@@ -1472,12 +1015,13 @@ function main() {
       activePopup = document.querySelector(".ui-popup-active");
       page = document.getElementsByClassName("ui-page-active")[0];
       pageId = page ? page.id : "";
-      // if (backToemotionPopUp) {
-      //   // tau.openPopup(emotionPopup);
-      //   backToemotionPopUp = false;
-      // }
+      if (backToemotionPopUp) {
+        tau.openPopup(emotionPopup);
+        backToemotionPopUp = false;
+      }
       if (pageId === "main" && !activePopup) {
         try {
+          //   tizen.application.getCurrentApplication().exit();
           //hide rather than exiting app
           tizen.application.getCurrentApplication().hide();
         } catch (ignore) {}
