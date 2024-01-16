@@ -73,7 +73,6 @@ classDiagram
   User -- Link : "1..*"
   Watch -- Link : "1..*"
   Configuration -- Link : "1..*"
-
 ```
 
 `curl --location 'BASE_URL/wearables/tizen/register/study?policy=POLICY'
@@ -131,8 +130,86 @@ Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a c
 
 - Response structure (200 OK)
 
-For example configurations check our [`/examples/configuration`](https://github.com/khnshn/Experiencer/tree/main/examples/configuration)
+Example configurations are available at [`/examples/configuration`](https://github.com/khnshn/Experiencer/tree/main/examples/configuration)
 
-PUT ALL EXPERIENCER DOCUMENTATIONS HERE!!!
+- v4.0.1: The following class diagrams illustrates the schema of JSON-fromatted configuration as-is and as-consumed.
 
-WISH LIST
+```mermaid
+classDiagram
+  class Configuration {
+    +policy: Policy
+    +questionnaire: Questionnaire
+    +activities: Activities
+  }
+
+  class Policy {
+    +method
+    +cooldown
+  }
+
+  class Questionnaire {
+    +dataProvider_id
+    +questions: List<Question>
+  }
+
+  class Question {
+    +type
+    +answers: List<Answer>
+    +question
+    +property_tk
+    +gameDescriptor_tk
+  }
+
+  class Answer {
+    +text
+    +value
+  }
+
+  class Activities {
+    +tizen: Tizen
+    +notification: Notification
+  }
+
+  class Tizen {
+    +key
+    +gameDescriptor
+    +dataProvider
+    +properties: TizenProperties
+  }
+
+  class Notification {
+    +key
+    +gameDescriptor
+    +dataProvider
+    +properties: NotificationProperties
+  }
+
+  class TizenProperties {
+    +acc: Property
+    +raw: Property
+    +hrm: Property
+    +activity: Property
+  }
+
+  class NotificationProperties {
+    +action: Property
+    +notification_ts: Property
+  }
+
+  class Property {
+    +key
+    +id
+  }
+
+  Configuration --> "1" Policy
+  Configuration --> "1" Questionnaire
+  Configuration --> "1" Activities
+  Questionnaire --> "n" Question
+  Question --> "n" Answer
+  Activities --> "1" Tizen
+  Activities --> "1" Notification
+  Tizen --> "1" TizenProperties
+  Notification --> "1" NotificationProperties
+  TizenProperties --> "1" Property
+  NotificationProperties --> "1" Property
+```
