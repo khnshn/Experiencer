@@ -19,7 +19,7 @@ _This documentation details the functionalities and API calls within Experiencer
 
 - Response structure (200 OK)
 
-  The following is received when EMAIL and PASSWORD are correct
+  The following JSON is received when EMAIL and PASSWORD are correct
 
 `{"access_token": "REMOVED FOR PRIVACY",
 "token_type": "REMOVED FOR PRIVACY",
@@ -44,7 +44,9 @@ _This documentation details the functionalities and API calls within Experiencer
 
    A user is identified by the token received from step 1. The [REGISTER_ID](https://docs.tizen.org/application/web/guides/messaging/push/#registering-to-the-push-service) is fetched programatically within Experiencer and visualized by a QR code on the home screen of Experiencer.
 
-   A study is defined by the principal investigator of the research (an alphanumeric string)
+   A study name and configuration is defined by the principal investigator of the research (an alphanumeric string)
+
+   A policy is also defined by the principal investigator (currently in v4.0.1 ALL, KNOWN, UNKNOWN, and ML policies can be chosen)
 
 ```mermaid
 graph TD
@@ -86,6 +88,10 @@ graph TD
 
 - Response structure (200 OK)
 
+  The following response is received when the correct information is passed.
+
+  Calling this API sends a push notification to the watch that includes the user token
+
 `{
     "id": REMOVED FOR PRIVACY (WAS INT),
     "registerId": "5REMOVED FOR PRIVACY",
@@ -93,3 +99,5 @@ graph TD
 }`
 
 - Response structure (422 Unprocessable Entity)
+
+  In case the push notification does not go through (due to Samsung push service being down or watch screen being off) the same requst can be repeated. Repeating the request would respond with an empty body and status code 422 if the link is already existing and push command is sent.
