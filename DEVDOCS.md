@@ -35,11 +35,25 @@ _This documentation details the functionalities and API calls within Experiencer
 2. Connect a watch to a user and a study
 
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+graph TD
+  subgraph User
+    user((User))
+  end
+
+  subgraph Watch
+    watch1((Watch 1))
+    watch2((Watch 2))
+  end
+
+  subgraph Study
+    study1((Study 1))
+    study2((Study 2))
+  end
+
+  user --> watch1
+  user --> watch2
+  user --> study1
+  user --> study2
 ```
 
 `curl --location 'BASE_URL/wearables/tizen/register/study?policy=POLICY'
