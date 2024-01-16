@@ -60,3 +60,7 @@ Alireza Khanshan is a PhD candidate in the Future Everyday group of the industri
 
 * Author's [homepage](https://khanshan.com/)
 * For more information about the sofware visit [The Official Experiencer website](https://experiencer.eu/).
+
+## Publications
+
+Khanshan, A., Van Gorp, P., Markopoulos, P. (2023). Experiencer: An Open-Source Context-Sensitive Wearable Experience Sampling Tool. In: Tsanas, A., Triantafyllidis, A. (eds) Pervasive Computing Technologies for Healthcare. PH 2022. Lecture Notes of the Institute for Computer Sciences, Social Informatics and Telecommunications Engineering, vol 488. Springer, Cham. https://doi.org/10.1007/978-3-031-34586-9_21

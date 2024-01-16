@@ -1,42 +1,26 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<widget
-  xmlns="http://www.w3.org/ns/widgets"
-  xmlns:tizen="http://tizen.org/ns/widgets"
-  id="http://yourdomain/ActivityListener"
-  version="1.7.4"
-  viewmodes="maximized"
->
-    <access origin="*" subdomains="true" />
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="http://yourdomain/ActivityListener" version="1.8.0" viewmodes="maximized">
+    <access origin="*" subdomains="true"></access>
     <tizen:app-control>
-        <tizen:src name="index.html" reload="disable" />
-        <tizen:operation
-      name="http://tizen.org/appcontrol/operation/gbFeedback"
-    />
+        <tizen:src name="index.html" reload="disable"/>
+        <tizen:operation name="http://tizen.org/appcontrol/operation/gbFeedback"/>
     </tizen:app-control>
-    <tizen:application
-    id="APP_ID.ActivityListener"
-    package="APP_ID"
-    required_version="5.5"
-  />
-    <content src="index.html" />
-    <feature name="http://tizen.org/feature/screen.size.normal" />
-    <feature name="http://tizen.org/feature/humanactivitymonitor" />
-    <feature name="http://tizen.org/feature/network.wifi" />
-    <icon src="icon.png" />
+    <tizen:application id="APP_ID.ActivityListener" package="APP_ID" required_version="5.5"/>
+    <tizen:background-category value="sensor"/>
+    <tizen:background-category value="background-network"/>
+    <content src="index.html"/>
+    <feature name="http://tizen.org/feature/screen.size.normal"/>
+    <feature name="http://tizen.org/feature/humanactivitymonitor"/>
+    <feature name="http://tizen.org/feature/network.wifi"/>
+    <icon src="icon.png"/>
     <name>Experiencer</name>
-    <tizen:profile name="wearable" />
-    <tizen:setting
-    background-support="enable"
-    encryption="disable"
-    hwkey-event="enable"
-  />
-    <tizen:background-category value="sensor" />
-    <tizen:background-category value="background-network" />
-    <tizen:privilege name="http://tizen.org/privilege/power" />
-    <tizen:privilege name="http://tizen.org/privilege/healthinfo" />
-    <tizen:privilege name="http://tizen.org/privilege/location" />
-    <tizen:privilege name="http://tizen.org/privilege/notification" />
-    <tizen:privilege name="http://tizen.org/privilege/alarm" />
-    <tizen:privilege name="http://tizen.org/privilege/push" />
-    <tizen:privilege name="http://tizen.org/privilege/internet" />
+    <tizen:privilege name="http://tizen.org/privilege/power"/>
+    <tizen:privilege name="http://tizen.org/privilege/healthinfo"/>
+    <tizen:privilege name="http://tizen.org/privilege/location"/>
+    <tizen:privilege name="http://tizen.org/privilege/notification"/>
+    <tizen:privilege name="http://tizen.org/privilege/alarm"/>
+    <tizen:privilege name="http://tizen.org/privilege/push"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:profile name="wearable"/>
+    <tizen:setting background-support="enable" encryption="disable" hwkey-event="enable"/>
 </widget>

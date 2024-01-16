@@ -12,42 +12,6 @@ var typ;
 // sensor data will be appended to these, cleared after storage in db
 var hrm_array = [];
 var ppg_array = [];
-// var example_3 = {
-//   // to be fetched from the config file later
-//   dataProvider_id: 13,
-//   questions: [
-//     {
-//       type: "multiple",
-//       answers: [
-//         { text: "Extremely alert", value: 1 },
-//         { text: "Alert", value: 2 },
-//         { text: "Neither alert nor sleepy", value: 2 },
-//         { text: "Sleepy, but no difficulty remaining awake", value: 3 },
-//         { text: "Extremely sleepy, fighting sleep", value: 4 },
-//       ],
-//       question: "How alert of sleepy do you feel at the moment?",
-//       property_tk: "ALERT_OR_SLEEPY_ANSWER",
-//       gameDescriptor_tk: "HOW_ALERT_OR_SLEEPY_DO_YOU_FEEL_AT_THE_MOMENT",
-//     },
-//     {
-//       type: "multiple",
-//       answers: [
-//         { text: "Very convenient", value: 1 },
-//         { text: "Convenient", value: 2 },
-//         { text: "Somewhat convenient", value: 2 },
-//         { text: "Neither convenient nor inconvenient", value: 3 },
-//         { text: "Somewhat inconvenient", value: 4 },
-//         { text: "Inconvenient", value: 5 },
-//         { text: "Very inconvenient", value: 6 },
-//       ],
-//       question:
-//         "How convenient or inconvenient was the timing of the notification for you?",
-//       property_tk: "CONVENIENT_OR_INCONVENIENT_ANSWER",
-//       gameDescriptor_tk:
-//         "HOW_CONVENIENT_OR_INCONVENIENT_WAS_THE_TIMING_OR_THE_NOTIFICATION_FOR_YOU",
-//     },
-//   ],
-// };
 var acc_array = [];
 // same as notification id
 var sensor_key;
@@ -149,12 +113,6 @@ function prepareUI() {
       // $(document).trigger("feedbackEvent", { "emotion": emotion + 1, "intensity": intensity + 1 });
     }
   );
-  // for (let i = 0; i < question_ids.length; i++) {
-  //   $("#" + question_ids[i]).addEventListener("popupshow", function () {
-  //     console.log("`popupshow` fired");
-  //     $(".ui-popup-wrapper").scrollTop(0);
-  //   });
-  // }
 }
 function toastDone() {
   var messages = [
@@ -426,7 +384,8 @@ function refreshToken() {
     method: "POST",
     timeout: 0,
     headers: {
-      Authorization: AUTH_TOKEN,
+      Authorization:
+        "Basic Z2FtZWJ1c19iYXNlX2FwcDppdkFxTFNSSnBRaDJ4QzE4OVYySEFvblVXWmd4UnVZQg==",
       "Content-Type": "application/x-www-form-urlencoded",
     },
     data: {
@@ -883,7 +842,7 @@ function notify(data, removePrev = true) {
       content: data.content,
       images: {
         iconPath:
-          "/opt/usr/globalapps/APP_ID/shared/res/APP_ID.ActivityListener.png",
+          "/opt/usr/globalapps/NDLfqWiZ8Z/shared/res/NDLfqWiZ8Z.ActivityListener.png",
       },
       actions: {
         soundPath: "music/Over the horizon.mp3",
@@ -960,36 +919,37 @@ function onchangedPedometer(pedometerInfo) {
     },
     ["activity"]
   );
-  saveSteps();
+  // saveSteps();
   // send reminder regardless of activity
-  var startTime = 8;
-  var endTime = 22;
-  var startTimeString = "8:00";
-  var endTimeString = "22:00";
-  // specific for Karin's ESM
-  if (localStorage.hasOwnProperty("wakeup")) {
-    startTime = Number(localStorage.getItem("wakeup").split(":")[0]);
-    startTimeString = localStorage.getItem("wakeup");
-  }
-  if (localStorage.hasOwnProperty("sleep")) {
-    endTime = Number(localStorage.getItem("sleep").split(":")[0]);
-    endTimeString = localStorage.getItem("sleep");
-  }
-  if (startTime >= endTime) {
-    // e.g. start 8:00, end 1:00
-    endTime = 24 + endTime;
-  }
+  // var startTime = 8;
+  // var endTime = 22;
+  // var startTimeString = "8:00";
+  // var endTimeString = "22:00";
+  // // specific for Karin's ESM
+  // if (localStorage.hasOwnProperty("wakeup")) {
+  //   startTime = Number(localStorage.getItem("wakeup").split(":")[0]);
+  //   startTimeString = localStorage.getItem("wakeup");
+  // }
+  // if (localStorage.hasOwnProperty("sleep")) {
+  //   endTime = Number(localStorage.getItem("sleep").split(":")[0]);
+  //   endTimeString = localStorage.getItem("sleep");
+  // }
+  // if (startTime >= endTime) {
+  //   // e.g. start 8:00, end 1:00
+  //   endTime = 24 + endTime;
+  // }
   // calculate randTime
-  var randTime =
-    ((endTime - startTime) / (8 + 1)) * 60 * 60 * 1000 -
-    gb_config.policy.cooldown;
+  // var randTime =
+  //   ((endTime - startTime) / (8 + 1)) * 60 * 60 * 1000 -
+  //   gb_config.policy.cooldown;
   // extra notification to remind morning diary
-  sendReminder(startTimeString);
+  // sendReminder(startTimeString);
   if (
     (pedometerInfo.stepStatus == "UNKNOWN" &&
       gb_config.policy.method.toUpperCase() == "UNKNOWN") ||
     (pedometerInfo.stepStatus != "UNKNOWN" &&
-      gb_config.policy.method.toUpperCase() == "KNOWN")
+      gb_config.policy.method.toUpperCase() == "KNOWN") ||
+    gb_config.policy.method.toUpperCase() == "ALL"
   ) {
     $.when(readOne("NT", ["settings"])).done(function (data) {
       var notifTime;
@@ -1001,9 +961,9 @@ function onchangedPedometer(pedometerInfo) {
       }
       var checkTime = new Date().getTime() - notifTime;
       // check if in interval
-      var beepPossible = shallIBeep(startTimeString, endTimeString, new Date());
+      // var beepPossible = shallIBeep(startTimeString, endTimeString, new Date());
       // end check
-      if (checkTime > gb_config.policy.cooldown + randTime && beepPossible) {
+      if (checkTime > gb_config.policy.cooldown) {
         notify({
           id: id,
           type: pedometerInfo.stepStatus,
@@ -1275,6 +1235,7 @@ function init() {
 }
 function sendReminder(start) {
   $.when(readOne("REMINDER", ["settings"])).done(function (data) {
+    var id = new Date().getTime();
     var _30minutes = 1800000;
     var startTime = new Date();
     startTime.setHours(
@@ -1287,7 +1248,7 @@ function sendReminder(start) {
     if (data == null) {
       if (new Date().getTime() >= reminderTime) {
         notify({
-          id: new Date().getTime(),
+          id: id,
           type: "reminder",
           content: "This is a gentle reminder to fill out your diary",
         });
@@ -1309,7 +1270,7 @@ function sendReminder(start) {
         new Date().getTime() >= reminderTime
       ) {
         notify({
-          id: new Date().getTime(),
+          id: id,
           type: "reminder",
           content: "This is a gentle reminder to fill out your diary",
         });
@@ -1400,7 +1361,7 @@ function main() {
     );
   }
 }
-
+// override console.log
 (function () {
   // override console.log
   // var oldLog = console.log;
