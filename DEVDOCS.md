@@ -102,11 +102,13 @@ graph TD
 
   In case the push notification does not go through (due to Samsung push service being down or watch screen being off) the same requst can be repeated. Repeating the request would respond with an empty body and status code 422 if the link is already existing and push command is resent.
 
+### Push notification structure (for the token)
+
 ### Configuration Retrieval
 
 Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handeled by `getConfig()` in `app.js`.
 
-1. Get config request
+1. Get config
 
 `curl --location 'BASE_URL/wearables/tizen/config?registerId=REGISTER_ID'
 --header 'Authorization: Bearer TOKEN'`
