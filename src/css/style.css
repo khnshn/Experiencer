@@ -61,3 +61,29 @@ ul.log-list li:hover{
 	border-radius: 3.75rem;
 	margin-bottom: 12px;
 }
+.animated-background{
+	animation-name: backgroundColorPalette;
+	animation-duration: 5s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: linear; 
+}
+@keyframes backgroundColorPalette {
+	0% {
+		background: #ed8600;
+	}
+	25% {
+		background: #31945d;
+	}
+	50% {
+		background: #e26714;
+	}
+	75% {
+		background: #7663e0;
+	}
+	100% {
+		background: #c02401;
+	}
+}
+
+.original-orange{background-color: #ed8600}

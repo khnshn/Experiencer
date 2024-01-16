@@ -24,6 +24,9 @@ request.onupgradeneeded = function (event) {
   db.createObjectStore("settings", {
     keyPath: "key",
   });
+  db.createObjectStore("ml_settings", {
+    keyPath: "key",
+  });
   console.log("indexedDB::upgrade success");
 };
 // add new item to objectSore

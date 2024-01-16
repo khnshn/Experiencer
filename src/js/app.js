@@ -177,6 +177,44 @@ preparingPopup.addEventListener("popupbeforeshow", function () {
 $(document).on("popupEvent", { type: "UI" }, function (event, data) {
   $("#process-id").val(data);
   prepareUI(); // new addition to create dynamic questionnaire
+  /*
+   * ML check
+   */
+  if (gb_config.policy.method.toUpperCase() == "ML") {
+    $.when(readOne("NT", ["settings"])).done(function (NT) {
+      $.when(readOne("NT_assessed", ["ml_settings"])).done(function (
+        NT_assessed
+      ) {
+        if (NT == NT_assessed) {
+          console.log("notif already assessed");
+          // notification is assessed, the current moment is opportune
+          retrainSaveTensor("last_pa_vector", 1);
+        } else {
+          console.log("notif is being assessed");
+          // notification is not yet assessed
+          // assess the convenience of the notification
+          $.when(assessLastNotification()).done((label) => {
+            console.log("notification assessment is: " + label);
+            if (label != null) {
+              update({ key: "last_notif_reaction", value: label }, [
+                // store the reaction
+                "ml_settings",
+              ]);
+              console.log("label: ", label);
+              if (label == 0) {
+                retrainSaveTensor("last_notif_vector", 0, function () {
+                  // if label is zero the moment of response is opportune and should be considered
+                  retrainSaveTensor("last_pa_vector", 1);
+                });
+              } else {
+                retrainSaveTensor("last_notif_vector", 1);
+              }
+            }
+          });
+        }
+      });
+    });
+  }
   tau.openPopup(preparingPopup);
   setTimeout(() => {
     tau.closePopup(preparingPopup);
@@ -500,7 +538,9 @@ function checkAlarm() {
             alarm.getRemainingSeconds() +
             " seconds later"
         );
-        tizen.application.getCurrentApplication().hide();
+        if (gb_config.policy.method.toUpperCase() == "ML") {
+          tizen.application.getCurrentApplication().hide();
+        }
       } catch (error) {
         console.log("No alarm");
         makeAlarm();
@@ -508,113 +548,6 @@ function checkAlarm() {
     } else {
       console.log("No alarm");
       makeAlarm();
-    }
-  });
-}
-function saveSteps() {
-  if (!config.SYNC_STEPS) {
-    return false;
-  }
-  $.when(readOne("last_pedometer", ["settings"])).done(function (data) {
-    var date = new Date();
-    if (data == null) {
-      var last_pedometer = parseInt(
-        new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          0,
-          0,
-          0
-        ).getTime() / 1000
-      );
-      update({ key: "last_pedometer", value: last_pedometer }, ["settings"]);
-    } else {
-      var last_pedometer = data;
-    }
-    var query = {
-      startTime: last_pedometer,
-      endTime: parseInt(date.getTime() / 1000),
-    };
-    console.log(query);
-    update({ key: "last_pedometer", value: query.endTime }, ["settings"]);
-    tizen.humanactivitymonitor.readRecorderData(
-      "PEDOMETER",
-      query,
-      function (data) {
-        console.log(data);
-        data = data[0];
-        var da = data.totalStepCount;
-        var daw = data.walkStepCount;
-        var dar = data.runStepCount;
-        saveStepsByType(da, "DA");
-        saveStepsByType(daw, "DAW");
-        saveStepsByType(dar, "DAR");
-      },
-      function (error) {
-        console.log(error.name + ": " + error.message);
-      }
-    );
-  });
-}
-function saveStepsByType(accumulativeTotalXCount, type) {
-  $.when(readOne(type, ["settings"])).done(function (data) {
-    var date = new Date();
-    var dayAggregates = data == null ? null : JSON.parse(data);
-    if (dayAggregates == null) {
-      // add first one
-      var da = {
-        year: date.getFullYear(),
-        month: date.getMonth() + 1,
-        day: date.getDate(),
-        steps: accumulativeTotalXCount,
-        synced: false,
-      };
-      if (type == "DA") {
-        $("#steps").text(accumulativeTotalXCount);
-        update({ key: "stepsview", value: accumulativeTotalXCount }, [
-          "settings",
-        ]);
-      }
-      update({ key: type, value: JSON.stringify([da]) }, ["settings"]);
-    } else {
-      // update existing one
-      var notfound = true;
-      for (var i = 0; i < dayAggregates.length; i++) {
-        if (
-          dayAggregates[i].year == date.getFullYear() &&
-          dayAggregates[i].month == date.getMonth() + 1 &&
-          dayAggregates[i].day == date.getDate()
-        ) {
-          notfound = false;
-          dayAggregates[i].steps =
-            dayAggregates[i].steps + accumulativeTotalXCount;
-          if (type == "DA") {
-            $("#steps").text(dayAggregates[i].steps);
-            update({ key: "stepsview", value: dayAggregates[i].steps }, [
-              "settings",
-            ]);
-          }
-          break;
-        }
-      }
-      if (notfound) {
-        // add new one
-        dayAggregates.push({
-          year: date.getFullYear(),
-          month: date.getMonth() + 1,
-          day: date.getDate(),
-          steps: accumulativeTotalXCount,
-          synced: false,
-        });
-        if (type == "DA") {
-          $("#steps").text(accumulativeTotalXCount);
-          update({ key: "stepsview", value: accumulativeTotalXCount }, [
-            "settings",
-          ]);
-        }
-      }
-      update({ key: type, value: JSON.stringify(dayAggregates) }, ["settings"]);
     }
   });
 }
@@ -661,6 +594,31 @@ function getConfig() {
         gb_config = data;
         update({ key: "gb_config", value: JSON.stringify(data) }, ["settings"]);
         console.log(gb_config);
+        //
+        /*
+         * ML check
+         */
+        if (gb_config.policy.method.toUpperCase() == "ML") {
+          // download model
+          $.when(readOne("ml_download", ["settings"])).done(function (data) {
+            if (data == null) {
+              downloadFromURL(config.JSON_URL, () => {
+                downloadFromURL(config.BIN_URL, () => {
+                  loadModelFS(config.PREFIX + "model.json").then((model) => {
+                    saveModelIDB(model, "personal-model").then(() => {
+                      update(
+                        { key: "ml_download", value: new Date().getTime() },
+                        ["settings"]
+                      );
+                      console.log("saved model in indexedDB");
+                      tizen.application.getCurrentApplication().hide();
+                    });
+                  });
+                });
+              });
+            }
+          });
+        }
         //
         monitor();
       },
@@ -768,7 +726,9 @@ function makeAlarm() {
     { key: "alarm", value: alarm.id },
     ["settings"],
     function () {
-      tizen.application.getCurrentApplication().hide();
+      if (gb_config.policy.method.toUpperCase() != "ML") {
+        tizen.application.getCurrentApplication().hide();
+      }
     }
   );
 }
@@ -895,7 +855,7 @@ function requestPermission(
 }
 function onchangedPedometer(pedometerInfo) {
   console.log("onchangedPedometer()");
-  var data = {
+  var pa_data = {
     src: "p",
     ts: new Date().getTime(),
     type: pedometerInfo.stepStatus,
@@ -907,7 +867,7 @@ function onchangedPedometer(pedometerInfo) {
     distance: pedometerInfo.accumulativeDistance,
     cals: pedometerInfo.accumulativeCalorie,
   };
-  console.log(JSON.stringify(data));
+  console.log(JSON.stringify(pa_data));
   var id = new Date().getTime();
   sensor_key = id;
   add(
@@ -915,55 +875,171 @@ function onchangedPedometer(pedometerInfo) {
       eventKey: id,
       eventOccuredAt: new Date().getTime(),
       eventType: "activity",
-      eventData: data,
+      eventData: pa_data,
     },
     ["activity"]
   );
-  // saveSteps();
-  // send reminder regardless of activity
-  // var startTime = 8;
-  // var endTime = 22;
-  // var startTimeString = "8:00";
-  // var endTimeString = "22:00";
-  // // specific for Karin's ESM
-  // if (localStorage.hasOwnProperty("wakeup")) {
-  //   startTime = Number(localStorage.getItem("wakeup").split(":")[0]);
-  //   startTimeString = localStorage.getItem("wakeup");
-  // }
-  // if (localStorage.hasOwnProperty("sleep")) {
-  //   endTime = Number(localStorage.getItem("sleep").split(":")[0]);
-  //   endTimeString = localStorage.getItem("sleep");
-  // }
-  // if (startTime >= endTime) {
-  //   // e.g. start 8:00, end 1:00
-  //   endTime = 24 + endTime;
-  // }
-  // calculate randTime
-  // var randTime =
-  //   ((endTime - startTime) / (8 + 1)) * 60 * 60 * 1000 -
-  //   gb_config.policy.cooldown;
-  // extra notification to remind morning diary
-  // sendReminder(startTimeString);
   if (
     (pedometerInfo.stepStatus == "UNKNOWN" &&
       gb_config.policy.method.toUpperCase() == "UNKNOWN") ||
     (pedometerInfo.stepStatus != "UNKNOWN" &&
       gb_config.policy.method.toUpperCase() == "KNOWN") ||
-    gb_config.policy.method.toUpperCase() == "ALL"
+    gb_config.policy.method.toUpperCase() == "ALL" ||
+    gb_config.policy.method.toUpperCase() == "ML"
   ) {
+    var first_run;
     $.when(readOne("NT", ["settings"])).done(function (data) {
       var notifTime;
       if (data == null) {
+        first_run = true;
+        // only happens the first time so 0
         notifTime = new Date().getTime();
         update({ key: "NT", value: new Date().getTime() }, ["settings"]);
       } else {
+        first_run = false;
         notifTime = parseInt(data);
       }
       var checkTime = new Date().getTime() - notifTime;
-      // check if in interval
-      // var beepPossible = shallIBeep(startTimeString, endTimeString, new Date());
-      // end check
-      if (checkTime > gb_config.policy.cooldown) {
+      console.log("first time:" + first_run);
+      /*
+       * ML check
+       */
+      if (gb_config.policy.method.toUpperCase() == "ML") {
+        // check the time since start
+        $.when(readOne("start_time", ["ml_settings"])).done(function (data) {
+          if (data == null) {
+            start_time = new Date().getTime();
+            update({ key: "start_time", value: start_time }, ["ml_settings"]);
+          } else {
+            start_time = parseInt(data);
+          }
+          $.when(readOne("last_notif_reaction", ["ml_settings"])).done(
+            function (data) {
+              if (data == null) {
+                last_notif_reaction = -1;
+              } else {
+                last_notif_reaction = parseInt(data);
+              }
+              // store/update PA information everytime
+              // create a feature vector suitable for model
+              feature_vector = preprocess_1x16(
+                new Date().getTime() - start_time,
+                checkTime,
+                pedometerInfo.speed,
+                last_notif_reaction,
+                pedometerInfo.stepStatus
+              );
+              // store feature vector needed for retraining
+              update({ key: "last_pa_vector", value: feature_vector }, [
+                "ml_settings",
+              ]);
+              if (
+                checkTime > gb_config.policy.cooldown / config.LESS ||
+                first_run
+              ) {
+                // CODE BELOW ONLY RUNS WHEN A NOTIFICATION SHOULD BE RECEIVED
+                // calculate time since last beep
+                // it is already calculated as `checkTime`
+                // load model
+                loadModelIDB("personal-model").then((idb_model) => {
+                  // model must already be downloaded via getConfig function
+                  // after the first time (above) is ignored, checkTime > gb_config.policy.cooldown is checked again after config.PEDOMETER_INTERVAL
+                  // so the delay to reassess is only config.PEDOMETER_INTERVAL that should be set to 1 minute (60000ms)
+                  $.when(readOne("start_time", ["ml_settings"])).done(function (
+                    start_time
+                  ) {
+                    // create a feature vector suitable for model
+                    feature_vector = preprocess_1x16(
+                      new Date().getTime() - start_time,
+                      checkTime,
+                      pedometerInfo.speed,
+                      last_notif_reaction,
+                      pedometerInfo.stepStatus
+                    );
+                    // store feature vector needed for retraining
+                    update(
+                      { key: "last_notif_vector", value: feature_vector },
+                      ["ml_settings"]
+                    );
+                    var prediction = idb_model.predict(
+                      tf.tensor2d(feature_vector, [1, feature_vector.length])
+                    );
+                    console.log("Model input:");
+                    console.log(feature_vector);
+                    console.log("Model output:");
+                    console.log(prediction.dataSync()[0]);
+                    if (isNaN(prediction.dataSync()[0])) {
+                      console.log("NaN exception, return!");
+                      return;
+                    }
+                    // if prediction is inopportune
+                    if (prediction.dataSync()[0] <= 0.5) {
+                      // IMPORTANT .5 or less is inopportune, otherwise opportune
+                      if (
+                        // and too long has passed without any notifications
+                        checkTime >=
+                        (gb_config.policy.cooldown / config.LESS) *
+                          config.ML_THRESHOLD
+                      ) {
+                        notify({
+                          id: id,
+                          type: pedometerInfo.stepStatus,
+                          content: message,
+                        });
+                        add(
+                          {
+                            eventKey: id,
+                            eventType: "ntf",
+                            eventOccuredAt: new Date().getTime(),
+                            eventData: { action: "RECEIVED" },
+                          },
+                          ["activity"]
+                        );
+                        update(
+                          {
+                            key: "NT",
+                            value: new Date().getTime(),
+                          },
+                          ["settings"]
+                        );
+                      }
+                    } else {
+                      // if prediction is opportune, beep
+                      notify({
+                        id: id,
+                        type: pedometerInfo.stepStatus,
+                        content: message,
+                      });
+                      add(
+                        {
+                          eventKey: id,
+                          eventType: "ntf",
+                          eventOccuredAt: new Date().getTime(),
+                          eventData: { action: "RECEIVED" },
+                        },
+                        ["activity"]
+                      );
+                      update(
+                        {
+                          key: "NT",
+                          value: new Date().getTime(),
+                        },
+                        ["settings"]
+                      );
+                    }
+                  });
+                });
+              } else {
+                console.log("not allowed to send notif (time)");
+              }
+            }
+          );
+        });
+      } else if (
+        checkTime > gb_config.policy.cooldown / config.LESS ||
+        first_run
+      ) {
+        // else : not ml
         notify({
           id: id,
           type: pedometerInfo.stepStatus,
@@ -1009,217 +1085,6 @@ function monitor() {
 }
 function init() {
   console.log("init()");
-  setTimeout(function syncSteps() {
-    if (!config.SYNC_STEPS) {
-      return false;
-    }
-    var today = new Date();
-    var time =
-      today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    console.log("syncSteps()::tick " + time);
-    $.when(readOne("DA", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DA"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DA"
-              );
-            }
-          }
-        }
-      }
-    });
-    $.when(readOne("DAW", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DAW"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DAW"
-              );
-            }
-          }
-        }
-      }
-    });
-    $.when(readOne("DAR", ["settings"])).done(function (data) {
-      var dayAggregates = data == null ? null : JSON.parse(data);
-      console.log(JSON.stringify(dayAggregates));
-      if (dayAggregates != null) {
-        for (var i = 0; i < dayAggregates.length; i++) {
-          if (!dayAggregates[i].synced) {
-            if (
-              dayAggregates[i].day == today.getDate() &&
-              dayAggregates[i].month == today.getMonth() + 1 &&
-              dayAggregates[i].year == today.getFullYear()
-            ) {
-              if (today.getHours() == 23 && today.getMinutes() > 30) {
-                console.log("syncSteps()::post current day");
-                // post to gamebus before 00:00
-                var date =
-                  dayAggregates[i].year +
-                  "-" +
-                  dayAggregates[i].month +
-                  "-" +
-                  dayAggregates[i].day;
-                postSteps(
-                  date,
-                  date,
-                  dayAggregates[i].steps,
-                  function (index, type) {
-                    $.when(readOne(type, ["settings"])).done(function (data) {
-                      var das = JSON.parse(data);
-                      das[index].synced = true;
-                      update({ key: type, value: JSON.stringify(das) }, [
-                        "settings",
-                      ]);
-                    });
-                  },
-                  i,
-                  "DAR"
-                );
-              }
-            } else {
-              console.log("syncSteps()::post previous days");
-              // post previous days to gamebus previous days
-              var date =
-                dayAggregates[i].year +
-                "-" +
-                dayAggregates[i].month +
-                "-" +
-                dayAggregates[i].day;
-              postSteps(
-                date,
-                date,
-                dayAggregates[i].steps,
-                function (index, type) {
-                  $.when(readOne(type, ["settings"])).done(function (data) {
-                    var das = JSON.parse(data);
-                    das[index].synced = true;
-                    update({ key: type, value: JSON.stringify(das) }, [
-                      "settings",
-                    ]);
-                  });
-                },
-                i,
-                "DAR"
-              );
-            }
-          }
-        }
-      }
-    });
-    setTimeout(syncSteps, 60000);
-  }, 60000);
   setTimeout(getWifiInfo, config.WIFI_INTERVAL);
   //  Connect to push service
   tizen.push.connect(
@@ -1288,45 +1153,6 @@ function sendReminder(start) {
     }
   });
 }
-function shallIBeep(start, end, current) {
-  var startHour = Number(start.split(":")[0]);
-  var startMinute = Number(start.split(":")[1]);
-  var endHour = Number(end.split(":")[0]);
-  var endMinute = Number(end.split(":")[1]);
-  var currentHour = current.getHours();
-  var currentMinute = current.getMinutes();
-  console.log(
-    "shallIBeep()::",
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    currentHour,
-    currentMinute
-  );
-  if (startHour < endHour) {
-    if (currentHour > startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour == startHour && currentMinute > startMinute) {
-      return true;
-    } else if (currentHour == endHour && currentMinute < endMinute) {
-      return true;
-    }
-  } else if (startHour > endHour) {
-    if (currentHour < startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour > startHour && currentHour < endHour) {
-      return true;
-    } else if (currentHour > startHour && currentHour > endHour) {
-      return true;
-    } else if (currentHour == startHour && currentMinute > startMinute) {
-      return true;
-    } else if (currentHour == endHour && currentMinute < endMinute) {
-      return true;
-    }
-  }
-  return false;
-}
 function startPedometerRecorder() {
   console.log("startPedometerRecorder()");
   try {
@@ -1341,7 +1167,15 @@ function main() {
   if (tizen.ppm.checkPermission(privilege) === "PPM_ALLOW") {
     tizen.power.request("CPU", "CPU_AWAKE");
     console.log("CPU is AWAKE");
-    init();
+    tizen.ppm.requestPermission(
+      "http://tizen.org/privilege/externalstorage",
+      init,
+      function () {
+        console.log("external permission denied");
+        tizen.application.getCurrentApplication().exit();
+      }
+    );
+    // init();
   } else {
     tizen.ppm.requestPermission(
       privilege,
@@ -1361,64 +1195,140 @@ function main() {
     );
   }
 }
-// override console.log
+function preprocess_1x16(
+  time_since_start,
+  time_since_prev_beep,
+  speed,
+  prev_reaction_to_beep,
+  current_pa
+) {
+  //e.g., [3.558e3, 5.0, 5.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,0.0, 0.0]
+  var feature_vector = [
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0,
+  ];
+  var pa = { NOT_MOVING: 0, RUNNING: 1, WALKING: 2, UNKNOWN: 3 };
+  var day_index = 3;
+  var nowInHours = new Date().getHours();
+  if (nowInHours >= 6 && nowInHours <= 12) {
+    day_index = 0;
+  } else if (nowInHours > 12 && nowInHours <= 18) {
+    day_index = 1;
+  } else if (nowInHours > 18 && nowInHours <= 23) {
+    day_index = 2;
+  }
+  feature_vector[0] = Math.floor(time_since_start / (15 * 60000)); // counts how many 15 minutes have passed
+  feature_vector[1] = Math.floor(time_since_prev_beep / (15 * 60000)); // counts how many 15 minutes have passed
+  feature_vector[2] = speed;
+  feature_vector[3 + prev_reaction_to_beep + 1] = 1;
+  feature_vector[6 + pa[current_pa]] = 1;
+  feature_vector[10 + (new Date().getDay() <= 5 ? 0 : 1)] = 1;
+  feature_vector[12 + day_index] = 1;
+
+  return feature_vector;
+}
+function assessLastNotification() {
+  var defer = $.Deferred();
+  $.when(readOne("NT", ["settings"])).done(function (data) {
+    if (data != null) {
+      notifTime = parseInt(data);
+      update({ key: "NT_assessed", value: notifTime }, ["ml_settings"]);
+      if (new Date().getTime() - notifTime <= config.OPPORTUNE_WINDOW) {
+        defer.resolve(1); // opportune
+        return;
+      } else {
+        defer.resolve(0); //inopportune
+        return;
+      }
+    }
+  });
+  return defer.promise();
+}
+function retrainSaveTensor(data_key, label, callback = function dummy() {}) {
+  loadModelIDB("personal-model").then((model) => {
+    // compile the model
+    model.compile({
+      loss: tf.losses.sigmoidCrossEntropy,
+      optimizer: "adam",
+    });
+    // fetch the feature vector
+    $.when(readOne(data_key, ["ml_settings"])).done((fv) => {
+      // retrain the model
+      data_x = tf.tensor2d(fv, [1, fv.length]);
+      data_y = tf.tensor2d([label], [1, 1]);
+      console.log("retraining with:");
+      console.log("label: " + label);
+      model.fit(data_x, data_y, { epochs: 10 }).then(() => {
+        // save the updated model
+        saveModelIDB(model, "personal-model").then(() => {
+          console.log("saved retrained model");
+          callback();
+        });
+      });
+    });
+  });
+}
 (function () {
   // override console.log
-  // var oldLog = console.log;
-  // console.log = function (message) {
-  //   var aggrLog = JSON.stringify({ ts: new Date().getTime(), args: arguments });
-  //   localStorage.getItem("LOG") == null
-  //     ? localStorage.setItem("LOG", aggrLog)
-  //     : localStorage.setItem(
-  //         "LOG",
-  //         localStorage.getItem("LOG") + "," + aggrLog
-  //       );
-  //   oldLog.apply(console, arguments);
-  // };
-  // sync logs periodically
-  setTimeout(function syncLogs() {
-    return false;
-    var fd = new FormData();
-    fd.append(
-      "activity",
-      '{"gameDescriptor":1081,"dataProvider":11,"date":' +
-        new Date().getTime() +
-        ',"propertyInstances":[{"property":1229,"value":"' +
-        (localStorage.getItem("LOG") == null
-          ? "[]"
-          : encodeURIComponent("[" + localStorage.getItem("LOG")) + "]") +
-        '"}],"players":[]}'
-    );
-    $.when(readOne("token", ["settings"])).done(function (token) {
-      var call = {
-        url: config.BASE_URL + config.ACITIVTY_ENDPOINT,
-        type: "POST",
-        dataType: "json",
-        processData: false,
-        contentType: false,
-        data: fd,
-        headers: {
-          Authorization: token,
-        },
-        beforeSend: function () {
-          console.log("syncLogs::requesting ajax...");
-        },
-        success: function (data) {
-          //clear local log
-          localStorage.setItem("LOG", "");
-          console.log("syncLogs::successfull ajax request");
-        },
-        error: function (e) {
-          console.log(`syncLogs::${e}`);
-        },
-        complete: function () {
-          console.log("syncLogs::ajax call is done!");
-        },
-      };
-      $.ajax(call);
-    });
-    setTimeout(syncLogs, 300000);
-  }, 300000);
+  if (config.OVERRIDE_LOGGING) {
+    // var oldLog = console.log;
+    console.log = function (message) {
+      var aggrLog = JSON.stringify({
+        ts: new Date().getTime(),
+        args: arguments,
+      });
+      localStorage.getItem("LOG") == null
+        ? localStorage.setItem("LOG", aggrLog)
+        : localStorage.setItem(
+            "LOG",
+            localStorage.getItem("LOG") + "," + aggrLog
+          );
+      oldLog.apply(console, arguments);
+    };
+    // sync logs periodically
+    setTimeout(function syncLogs() {
+      var fd = new FormData();
+      fd.append(
+        "activity",
+        '{"gameDescriptor":1081,"dataProvider":11,"date":' +
+          new Date().getTime() +
+          ',"propertyInstances":[{"property":1229,"value":"' +
+          (localStorage.getItem("LOG") == null
+            ? "[]"
+            : encodeURIComponent("[" + localStorage.getItem("LOG")) + "]") +
+          '"}],"players":[]}'
+      );
+      $.when(readOne("token", ["settings"])).done(function (token) {
+        var call = {
+          url: config.BASE_URL + config.ACITIVTY_ENDPOINT,
+          type: "POST",
+          dataType: "json",
+          processData: false,
+          contentType: false,
+          data: fd,
+          headers: {
+            Authorization: token,
+          },
+          beforeSend: function () {
+            console.log("syncLogs::requesting ajax...");
+          },
+          success: function (data) {
+            //clear local log
+            localStorage.setItem("LOG", "");
+            console.log("syncLogs::successfull ajax request");
+          },
+          error: function (e) {
+            console.log(`syncLogs::${e}`);
+          },
+          complete: function () {
+            console.log("syncLogs::ajax call is done!");
+          },
+        };
+        $.ajax(call);
+      });
+      setTimeout(syncLogs, 300000);
+    }, 300000);
+  }
   //event listener for tizen hw key
   window.addEventListener("tizenhwkey", function (ev) {
     console.log("`tizenhwkey` fired");
