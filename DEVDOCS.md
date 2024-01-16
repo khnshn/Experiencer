@@ -44,9 +44,9 @@ _This documentation details the functionalities and API calls within Experiencer
 
    A user is identified by the token received from step 1. The [REGISTER_ID](https://docs.tizen.org/application/web/guides/messaging/push/#registering-to-the-push-service) is fetched programatically within Experiencer and visualized by a QR code on the home screen of Experiencer.
 
-   A study name and configuration is defined by the principal investigator of the research (an alphanumeric string)
+   A STUDY_NAME (an alphanumeric string) and configuration is defined by the principal investigator
 
-   A policy is also defined by the principal investigator (currently in v4.0.1 ALL, KNOWN, UNKNOWN, and ML policies can be chosen)
+   A POLICY is also defined by the principal investigator (currently in v4.0.1 ALL, KNOWN, UNKNOWN, and ML policies can be chosen)
 
 ```mermaid
 graph TD
@@ -100,4 +100,17 @@ graph TD
 
 - Response structure (422 Unprocessable Entity)
 
-  In case the push notification does not go through (due to Samsung push service being down or watch screen being off) the same requst can be repeated. Repeating the request would respond with an empty body and status code 422 if the link is already existing and push command is sent.
+  In case the push notification does not go through (due to Samsung push service being down or watch screen being off) the same requst can be repeated. Repeating the request would respond with an empty body and status code 422 if the link is already existing and push command is resent.
+
+### Configuration Retrieval
+
+Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handeled by `getConfig()` in `app.js`.
+
+1. Get config request
+
+`curl --location 'BASE_URL/wearables/tizen/config?registerId=REGISTER_ID'
+--header 'Authorization: Bearer TOKEN'`
+
+- Response structure (200 OK)
+
+For example configurations check our [`/examples/configuration`](https://github.com/khnshn/Experiencer/tree/main/examples/configuration)

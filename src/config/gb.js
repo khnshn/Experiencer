@@ -12,9 +12,8 @@ var config = {
   TIZEN_PUSH: false,
   OVERRIDE_LOGGING: false,
   PREFIX: "file:///home/owner/media/Downloads/", // use this when model is downloaded from a URL
-  BIN_URL:
-    "https://experiencer.eu/wp-content/uploads/2023/07/group1-shard1of1.bin",
-  JSON_URL: "https://experiencer.eu/wp-content/uploads/2023/07/model.json",
+  BIN_URL: "OBSFUSCATED_TENSORFLOW_URL.bin",
+  JSON_URL: "OBSFUSCATED_TENSORFLOW_URL.json",
   ML_THRESHOLD: 2,
   LESS: 1, // TODO: change to 1 for production and to anything else positive for testing
   OPPORTUNE_WINDOW: 60000, // if notification is reacted to within 1 minute
