@@ -53,13 +53,11 @@ graph TD
   end
 
   subgraph Watch
-    watch1((Watch 1))
-    watch2((Watch 2))
+    watch((Watch))
   end
 
   subgraph Study
-    study1((Study 1))
-    study2((Study 2))
+    study((Study))
   end
 
   subgraph Link
@@ -75,12 +73,9 @@ graph TD
   end
 
   user --> link
-  link --> watch1
-  link --> watch2
-  link --> study1
-  link --> study2
-  study1 --> configuration
-  study2 --> configuration
+  watch --> link
+  study --> link
+  study --> configuration
   link --> policy
 ```
 
