@@ -221,7 +221,10 @@ classDiagram
 - Experiencer is developed as an application with background network process.
 - Experiencer is continuously running in the background. To achieve this with Web API, [Alarm API](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/alarm.html) is utilized and restarts the app every ~15 minutues to avoid OS battery drainage warning.
 - Experiencer listens to [Pedometer](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html#PedometerStepStatus) change events every minute. This serves as the foundation of sending notifications as this is a way to (almost) make sure that a user is wearing the watch.
-- ...
+- Experience is made for context sensitivity accordingly [HumanActivityMonitor API](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html#HumanActivityPedometerData) is utilized to detect `{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }` activities.
+- The policies defined in this version are "KNOWN" (`{ "NOT_MOVING", "WALKING", "RUNNING" }`), "UNKNOWN" (`{ "UNKNOWN" }`), ALL (`{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }`) and ML (see below). Respective conditions are define in `app.js` such that if e.g., a user is assigend "KNOWN" policy, notifications will be made only when any of `{ "NOT_MOVING", "WALKING", "RUNNING" }` are detected.
+- The notifications are sent according to an inter-notification time (named "cooldown" in the JSON-formatted config). When a notification is sent, the logic above goes to sleep until the `current_time >= last_notification_time + cooldown`.
+- For ML policy ...
 
 ## ✅ To Do
 
