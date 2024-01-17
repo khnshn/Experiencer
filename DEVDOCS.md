@@ -117,11 +117,11 @@ classDiagram
 
 For more information about the push notification visit [Push Notification | Tizen Docs](https://docs.tizen.org/application/web/guides/messaging/push/).
 
-- v4.0.1: `pushNotificationCallback(notification)` function in `app.js` parses this information and saves the token (`appData.token`).
+- v4.0.1: `pushNotificationCallback(notification)` function in [`/src/js/app.js`](/src/js/app.js) parses this information and saves the token (`appData.token`).
 
 ### Configuration Retrieval
 
-Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handeled by `getConfig()` in `app.js`.
+Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handeled by `getConfig()` in [`/src/js/app.js`](/src/js/app.js).
 
 1. Get config
 
@@ -218,13 +218,15 @@ classDiagram
 
 ### v4.0.1 (Tizen OS v5.5, Web API, TensorFlow, IndexedDB)
 
+- For base urls and global constants alike see [`/src/config/gb.js`](/src/config/gb.js)
 - Experiencer is developed as an application with background network process.
 - Experiencer is continuously running in the background. To achieve this with Web API, [Alarm API](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/alarm.html) is utilized and restarts the app every ~15 minutues to avoid OS battery drainage warning.
 - Experiencer listens to [Pedometer](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html#PedometerStepStatus) change events every minute. This serves as the foundation of sending notifications as this is a way to (almost) make sure that a user is wearing the watch.
 - Experience is made for context sensitivity accordingly [HumanActivityMonitor API](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html#HumanActivityPedometerData) is utilized to detect `{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }` activities.
-- The policies defined in this version are "KNOWN" (`{ "NOT_MOVING", "WALKING", "RUNNING" }`), "UNKNOWN" (`{ "UNKNOWN" }`), ALL (`{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }`) and ML (see below). Respective conditions are define in `app.js` such that if e.g., a user is assigend "KNOWN" policy, notifications will be made only when any of `{ "NOT_MOVING", "WALKING", "RUNNING" }` are detected.
+- The policies defined in this version are "KNOWN" (`{ "NOT_MOVING", "WALKING", "RUNNING" }`), "UNKNOWN" (`{ "UNKNOWN" }`), ALL (`{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }`) and ML (see below). Respective conditions are define in [`/src/js/app.js`](/src/js/app.js) such that if e.g., a user is assigend "KNOWN" policy, notifications will be made only when any of `{ "NOT_MOVING", "WALKING", "RUNNING" }` are detected.
 - The notifications are sent according to an inter-notification time (named "cooldown" in the JSON-formatted config). When a notification is sent, the logic above goes to sleep until the `current_time >= last_notification_time + cooldown`.
-- For ML policy ...
+- For ML policy, Experiencer downloads a trained TensorFlow binary classifier and consults with before sending a notification. If `prediction <= 0.5` is met a notification is not sent, otherwise it is.
+- Experiencer utilizes `TensorFlow.js` library to download the model, make inferences, and update the model. The downloaded model is updated based on the user behavior. All relevant logic can be found in [`/src/lib/gb/download_handler.js`](/src/lib/gb/download_handler.js), [`/src/lib/gb/tensoer_handler.js`](/src/lib/gb/tensoer_handler.js), and [`/src/js/app.js`](/src/js/app.js)
 
 ## ✅ To Do
 
