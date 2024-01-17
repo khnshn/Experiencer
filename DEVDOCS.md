@@ -98,7 +98,7 @@ classDiagram
 
 ### Push Notification Structure (for the auth token)
 
-1. Raw request (the request is currently handeled by GameBus API when calling the endpoint in step 2)
+1. Raw request (the request is currently handled by GameBus API when calling the endpoint in step 2)
 
 `curl --location 'https://euwest.gateway.push.samsungosp.com:8090/spp/pns/api/push' 
 --header 'appID: APP_ID' 
@@ -121,7 +121,7 @@ For more information about the push notification visit [Push Notification | Tize
 
 ### Configuration Retrieval
 
-Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handeled by `getConfig()` in [`/src/js/app.js`](/src/js/app.js).
+Experiencer consumes a JSON-formatted configuration to operate. Retrieval of a configuration is handled by `getConfig()` in [`/src/js/app.js`](/src/js/app.js).
 
 1. Get config
 
@@ -214,6 +214,10 @@ classDiagram
   NotificationProperties --> "1" Property
 ```
 
+### Data transfer
+
+Experiencer collects then sends the data to GameBus as [GameBus activities](https://devdocs.gamebus.eu/).
+
 ## 🛠 Applicatoin Logic
 
 ### v4.0.1 (Tizen OS v5.5, Web API, TensorFlow, IndexedDB)
@@ -226,9 +230,20 @@ classDiagram
 - The policies defined in this version are "KNOWN" (`{ "NOT_MOVING", "WALKING", "RUNNING" }`), "UNKNOWN" (`{ "UNKNOWN" }`), ALL (`{ "NOT_MOVING", "WALKING", "RUNNING", "UNKNOWN" }`) and ML (see below). Respective conditions are define in [`/src/js/app.js`](/src/js/app.js) such that if e.g., a user is assigend "KNOWN" policy, notifications will be made only when any of `{ "NOT_MOVING", "WALKING", "RUNNING" }` are detected.
 - The notifications are sent according to an inter-notification time (named "cooldown" in the JSON-formatted config). When a notification is sent, the logic above goes to sleep until the `current_time >= last_notification_time + cooldown`.
 - For ML policy, Experiencer downloads a trained TensorFlow binary classifier and consults with before sending a notification. If `prediction <= 0.5` is met a notification is not sent, otherwise it is.
-- Experiencer utilizes `TensorFlow.js` library to download the model, make inferences, and update the model. The downloaded model is updated based on the user behavior. All relevant logic can be found in [`/src/lib/gb/download_handler.js`](/src/lib/gb/download_handler.js), [`/src/lib/gb/tensoer_handler.js`](/src/lib/gb/tensoer_handler.js), and [`/src/js/app.js`](/src/js/app.js)
+- Experiencer utilizes [TensorFlow.js](https://www.tensorflow.org/js) library to download the model, make inferences, and update the model. The downloaded model is updated based on the user behavior. All relevant logic can be found in [`/src/lib/gb/download_handler.js`](/src/lib/gb/download_handler.js), [`/src/lib/gb/tensoer_handler.js`](/src/lib/gb/tensoer_handler.js), and [`/src/js/app.js`](/src/js/app.js)
+- The feature processing for updating the TensorFlow model is handled in the `function preprocess_1x16(time_since_start,time_since_prev_beep,speed,prev_reaction_to_beep,current_pa)` function in [`/src/js/app.js`](/src/js/app.js).
+- The label of the feature vector produced above is 0 when a moment is opportune (meaning that the participant has not reacted to the last notification within `OPPORTUNE_WINDOW`) otherwise it is 1.
+- The network operations for sending the self-report and physiological data is handled in [`/src/lib/gb/webservice.js`](/src/lib/gb/webservice.js). Every `WIFI_INTERVAL` the webservice queues the data that is stored on the watch and transfers them to GameBus sequentially. Upon a successful transaction, the data is deleted from the watch.
+- All the data is stored on the watch using IndexedDB the operations of which are all handled in [`/src/lib/gb/webservice.js`](/src/lib/gb/webservice.js).
 
 ## ✅ To Do
 
-- Develop a WearOS version
-- ...
+### For the Tizen OS version (will be depricated)
+
+- Remove older tensorflow models when a new one is downloaded.
+
+### Develop a WearOS version with the following specifications:
+
+- Utilize Samsung Privilleged SDK for ECG and SpO2 data access.
+- Include a [service](https://developer.android.com/develop/background-work/services) to handle background operations.
+- Follow the [GameBus developer portal guidelines](https://devdocs.gamebus.eu/gamebus-developer-portal/) for authentican and data transfer.
