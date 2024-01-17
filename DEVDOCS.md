@@ -1,8 +1,8 @@
-# DevDocs
+# 👩‍💻 DevDocs
 
 _This documentation details the functionalities and API calls within Experiencer_
 
-## API Calls
+## 🌐 API Calls
 
 ### 👮‍♂️ Authentiaction
 
@@ -214,8 +214,16 @@ classDiagram
   NotificationProperties --> "1" Property
 ```
 
-## 🛠 Applicatoin Logics
+## 🛠 Applicatoin Logic
 
-### v4.0.1
+### v4.0.1 (Tizen OS v5.5, Web API, TensorFlow, IndexedDB)
 
-## ✅ ToDo
+- Experiencer is developed as an application with background network process.
+- Experiencer is continuously running in the background. To achieve this with Web API, [Alarm API](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/alarm.html) is utilized and restarts the app every ~15 minutues to avoid OS battery drainage warning.
+- Experiencer listens to [Pedometer](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/humanactivitymonitor.html#PedometerStepStatus) change events every minute. This serves as the foundation of sending notifications as this is a way to (almost) make sure that a user is wearing the watch.
+- ...
+
+## ✅ To Do
+
+- Develop a WearOS version
+- ...
