@@ -4,7 +4,7 @@ _This documentation details the functionalities and API calls within Experiencer
 
 ## API Calls
 
-### Authentiaction
+### 👮‍♂️ Authentiaction
 
 1. Get Token
 
@@ -50,8 +50,6 @@ _This documentation details the functionalities and API calls within Experiencer
 
    A POLICY is chosen by the principal investigator
 
-- v4.0.1: ALL, KNOWN, UNKNOWN, and ML policies can be chosen.
-
 ```mermaid
 classDiagram
   class User {
@@ -74,6 +72,8 @@ classDiagram
   Watch -- Link : "1..*"
   Configuration -- Link : "1..*"
 ```
+
+- v4.0.1: ALL, KNOWN, UNKNOWN, and ML policies can be chosen.
 
 `curl --location 'BASE_URL/wearables/tizen/register/study?policy=POLICY'
 --header 'Content-Type: application/json'
@@ -213,3 +213,9 @@ classDiagram
   TizenProperties --> "1" Property
   NotificationProperties --> "1" Property
 ```
+
+## 🛠 Applicatoin Logics
+
+### v4.0.1
+
+## ✅ ToDo
