@@ -236,6 +236,8 @@ Experiencer collects then sends the data to GameBus as [GameBus activities](http
 - The network operations for sending the self-report and physiological data is handled in [`/src/lib/gb/webservice.js`](/src/lib/gb/webservice.js). Every `WIFI_INTERVAL` the webservice queues the data that is stored on the watch and transfers them to GameBus sequentially. Upon a successful transaction, the data is deleted from the watch.
 - All the data is stored on the watch using IndexedDB the operations of which are all handled in [`/src/lib/gb/webservice.js`](/src/lib/gb/webservice.js).
 - Experiencer relies on push notifications only for authentiaction purposes. The notifications for self-report are initiated from the app itself and not from a push server. That is to ensure that the app can function offline as well. This is crucial since it is not realistic to expect users to be online all the time.
+- Experiencer records [acceleration, PPG (HRM_RAW)](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/sensor.html), [heart-rate and peak-to-peak](https://docs.tizen.org/application/web/guides/sensors/ham/) interval only during the time that a self-report action is initiated (by tapping the self-report button) and continues recording until the self-report is submitted but for a maximum of `SENSOR_RECORDING` (defined in [`/src/config/gb.js`](/src/config/gb.js)).
+- The contents of the questionnaire (that is shown after tapping the self-report button) is fetched from the fetched config (see Configuration Retrieval section above) and is visualized through [`/src/lib/gb/questionnaireHelper.js`](/src/lib/gb/questionnaireHelper.js).
 
 ## ✅ To Do
 
