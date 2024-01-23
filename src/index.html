@@ -21,7 +21,7 @@
 		<div class="ui-content">
 			<div id="ui-content"></div>
 			<p class="steps" style="display: none;">Daily Steps<br /><span id="steps">0</span></p>
-			<p onclick="showLog()">v4.0.1</p>
+			<p onclick="showLog()">v4.0.2</p>
 			<a class="ui-btn my-btn animated-background" href="#" id="feedback" onclick="checkAppControl()">
 				SELF-REPORT
 			</a>
@@ -129,6 +129,12 @@
 	<script src="lib/gb/jquery-3.5.1.min.js"></script>
 	<script src="lib/gb/qrcode.js"></script>
 	<script src="config/gb.js"></script>
+	<script>
+		// disable logs
+		if (!config.DEBUG) {
+			console.log = function () { };
+		}
+	</script>
 	<script src="lib/gb/indexedDB.js"></script>
 	<script src="lib/gb/webservice.js"></script>
 	<script src="lib/gb/questionnaireHelper.js"></script>

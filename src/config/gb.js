@@ -17,4 +17,5 @@ var config = {
   ML_THRESHOLD: 2,
   LESS: 1, // TODO: change to 1 for production and to anything else positive for testing
   OPPORTUNE_WINDOW: 60000, // if notification is reacted to within 1 minute
+  DEBUG: false,
 };
