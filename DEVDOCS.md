@@ -239,6 +239,12 @@ Experiencer collects then sends the data to GameBus as [GameBus activities](http
 - Experiencer records [acceleration, PPG (HRM_RAW)](https://docs.tizen.org/application/web/api/5.5/device_api/wearable/tizen/sensor.html), [heart-rate and peak-to-peak](https://docs.tizen.org/application/web/guides/sensors/ham/) interval only during the time that a self-report action is initiated (by tapping the self-report button) and continues recording until the self-report is submitted but for a maximum of `SENSOR_RECORDING` (defined in [`/src/config/gb.js`](/src/config/gb.js)).
 - The contents of the questionnaire (that is shown after tapping the self-report button) is fetched from the configurations (see [Configuration Retrieval](#configuration-retrieval)) and is visualized through [`/src/lib/gb/questionnaireHelper.js`](/src/lib/gb/questionnaireHelper.js).
 
+## Important Resources
+
+- [Installing Tizen studio](https://docs.tizen.org/application/tizen-studio/setup/install-sdk/)
+- [Creating application project](https://docs.tizen.org/application/web/tutorials/process/creating-app-project/)
+- [Web application samples](https://docs.tizen.org/development/sample/web)
+
 ## ✅ To Do List
 
 ### For the Tizen OS version (will be depricated)
