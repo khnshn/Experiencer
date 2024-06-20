@@ -592,6 +592,10 @@ function getConfig() {
         $("#feedback").show();
         console.log("getConfig()::config received");
         gb_config = data;
+        if (config.DEBUG) {
+          // one might need to remove the example GPS
+          gb_config.gps = config.GPS_EXAMPLE.gps;
+        }
         update({ key: "gb_config", value: JSON.stringify(data) }, ["settings"]);
         console.log(gb_config);
         //
@@ -664,6 +668,10 @@ function updateConfig() {
       success: function (data) {
         console.log("updateConfig()::config received");
         gb_config = data;
+        if (config.DEBUG) {
+          // one might need to remove the example GPS
+          gb_config.gps = config.GPS_EXAMPLE.gps;
+        }
         update({ key: "gb_config", value: JSON.stringify(data) }, ["settings"]);
         console.log(gb_config);
       },
@@ -852,6 +860,134 @@ function requestPermission(
       );
     }
   }
+}
+function onChangedGPS(info) {
+  console.log("in onChangedGPS()");
+  // the lat and long are 200 if there is no coverage; found this experimentally
+  var prev_lats = [];
+  var prev_longs = [];
+  for (var i = 0; i < info.gpsInfo.length; i++) {
+    console.log(
+      "Coordinates: " +
+        info.gpsInfo[i].latitude +
+        ", " +
+        info.gpsInfo[i].longitude
+    );
+    console.log(prev_lats);
+    console.log(prev_longs);
+    if (
+      // should compare lat, long as a tuple not as separate coordinates but works for now
+      prev_lats.includes(info.gpsInfo[i].latitude) &&
+      prev_longs.includes(info.gpsInfo[i].longitude)
+    ) {
+      console.log("duplicate GPS reading, skipping");
+      continue; // on each change, a sequence of identical coordinates might exist, once one parsed, the rest of the same coordinates need to be skipped
+    } else {
+      prev_lats.push(info.gpsInfo[i].latitude);
+      prev_longs.push(info.gpsInfo[i].longitude);
+    }
+    if (gb_config.gps.hasOwnProperty("geofencing")) {
+      // geofencing, context-aware prompting
+      gb_config.gps.geofencing.forEach((geofencingElement) => {
+        if (
+          isWithinCircle(
+            geofencingElement.lat,
+            geofencingElement.long,
+            info.gpsInfo[i].latitude,
+            info.gpsInfo[i].longitude,
+            geofencingElement.r
+          )
+        ) {
+          $.when(
+            readOne("GEO" + CryptoJS.MD5(geofencingElement.message), [
+              "settings",
+            ])
+          ).done(function (data) {
+            var notifTimeGeo;
+            var firstGpsRun = false;
+            if (data == null) {
+              notifTimeGeo = new Date().getTime();
+              firstGpsRun = true;
+            } else {
+              notifTimeGeo = parseInt(data);
+            }
+            if (
+              new Date().getTime() - notifTimeGeo >
+                geofencingElement.cooldown ||
+              firstGpsRun
+            ) {
+              notify({
+                id: new Date().getTime(),
+                type: "geofencing",
+                content: geofencingElement.message,
+              });
+              update(
+                {
+                  key: "GEO" + CryptoJS.MD5(geofencingElement.message),
+                  value: new Date().getTime(),
+                },
+                ["settings"]
+              );
+              add(
+                {
+                  eventKey: new Date().getTime(),
+                  eventType: "ntf",
+                  eventOccuredAt: new Date().getTime(),
+                  eventData: { action: "RECEIVED-GEO" },
+                },
+                ["activity"]
+              );
+              console.log("GEO notification sent");
+            }
+          });
+        } else {
+          console.log("outside radius");
+        }
+      });
+    }
+    add(
+      {
+        eventKey: new Date().getTime(),
+        eventType: "gb_activity",
+        eventOccuredAt: new Date().getTime(),
+        eventData: [
+          {
+            gd_tk: gb_config.gps.gd_tk,
+            properties: [
+              {
+                propertyTK: gb_config.gps.prp_lat,
+                value: info.gpsInfo[i].latitude,
+              },
+              {
+                propertyTK: gb_config.gps.prp_long,
+                value: info.gpsInfo[i].longitude,
+              },
+              {
+                propertyTK: gb_config.gps.prp_alt,
+                value: info.gpsInfo[i].altitude,
+              },
+              {
+                propertyTK: gb_config.gps.prp_speed,
+                value: info.gpsInfo[i].speed,
+              },
+              {
+                propertyTK: gb_config.gps.prp_error,
+                value: info.gpsInfo[i].errorRange,
+              },
+              {
+                propertyTK: gb_config.gps.prp_ts,
+                value: info.gpsInfo[i].timestamp,
+              },
+            ],
+          },
+        ],
+      },
+      ["activity"]
+    );
+  }
+}
+function onErrorGPS(error) {
+  console.log("GPS :" + error.name + " " + error.message);
 }
 function onchangedPedometer(pedometerInfo) {
   console.log("onchangedPedometer()");
@@ -1082,6 +1218,17 @@ function monitor() {
     onchangedPedometer
   );
   startPedometerRecorder();
+  if (gb_config.hasOwnProperty("gps")) {
+    try {
+      tizen.humanactivitymonitor.start("GPS", onChangedGPS, onErrorGPS, {
+        callbackInterval: gb_config.gps.callback_interval,
+        sampleInterval: gb_config.gps.sample_interval,
+      });
+      console.log("GPS: tracker started");
+    } catch (err) {
+      console.log("GPS: " + err.name + ": " + err.message);
+    }
+  }
 }
 function init() {
   console.log("init()");
@@ -1169,7 +1316,16 @@ function main() {
     console.log("CPU is AWAKE");
     tizen.ppm.requestPermission(
       "http://tizen.org/privilege/externalstorage",
-      init,
+      function () {
+        tizen.ppm.requestPermission(
+          "http://tizen.org/privilege/location",
+          init,
+          function () {
+            console.log("location permission denied");
+            tizen.application.getCurrentApplication().exit();
+          }
+        );
+      },
       function () {
         console.log("external permission denied");
         tizen.application.getCurrentApplication().exit();
