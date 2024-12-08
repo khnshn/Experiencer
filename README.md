@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Experiencer logo" height="200" src="https://experiencer.eu/wp-content/uploads/2022/08/cropped-fit-Experiencer-logos_transparent.png">
+  <img alt="Experiencer logo" height="200" src="https://peasi.eu/wp-content/uploads/2022/08/cropped-fit-Experiencer-logos_transparent.png">
 </p>
 
 # Experiencer: A Smartwatch-based Context-sensitive Experience Sampling Tool Designed for Researchers and Study Participants
@@ -25,11 +25,11 @@ _for an in-depth developer documentation visit [DEVDOCS.md](/DEVDOCS.md)_
 Below the essential client-server interactions are explained so that developers can integrate their own back-end. Before storing data in GameBus via `POST` requests following the [GameBus DevDocs](https://devdocs.gamebus.eu/), a smartwatch (_device_) needs to be assigned to a _participant_, _ESM protocol_, and a _treatment group_. Such process is initiated by calling the `{base_url}/tizen/register/study?policy={treatment_group}` where device ID (retrieved by scanning the QR code shown on the main screen of the app) and ESM protocol name are passed as request body and GameBus user's auth token as request header (Fig.1). The aforementioned process can be used to authenticate a participant as well. Alternatively, Fig.2 shows an authentication flow where username and password can be put in manually.
 
 <figure align="center">
-  <img src="https://experiencer.eu/wp-content/uploads/2022/09/activity-diagrams-1.png">
+  <img src="https://peasi.eu/wp-content/uploads/2022/09/activity-diagrams-1.png">
   <figcaption>Fig.1 - Experiencer-GameBus interaction for registration and authentication</figcaption>
 </figure>
 <figure align="center">
-  <img src="https://experiencer.eu/wp-content/uploads/2022/09/activity-diagrams-2.png">
+  <img src="https://peasi.eu/wp-content/uploads/2022/09/activity-diagrams-2.png">
   <figcaption>Fig.2 - Experiencer-GameBus interaction for authentication</figcaption>
 </figure>
 
